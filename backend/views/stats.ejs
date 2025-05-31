@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head><title>Statistiques</title></head>
+<body>
+  <h1>Statistiques</h1>
+  <% if (error) { %>
+    <p style="color:red"><%= error %></p>
+  <% } else { %>
+    <form method="GET" action="/api/stats">
+      <label>ID Enseignant: <input type="number" name="id_enseignant" value="<%= filters.id_enseignant %>"></label><br>
+      <label>ID Classe: <input type="number" name="id_classe" value="<%= filters.id_classe %>"></label><br>
+      <label>Date Début: <input type="date" name="date_debut" value="<%= filters.date_debut %>"></label><br>
+      <label>Date Fin: <input type="date" name="date_fin" value="<%= filters.date_fin %>"></label><br>
+      <button type="submit">Filtrer</button>
+    </form>
+    <table border="1">
+      <tr><th>Enseignant</th><th>Classe</th><th>Critère</th><th>Moyenne</th></tr>
+      <% stats.forEach(stat => { %>
+        <tr>
+          <td><%= stat.ID_ENS %></td>
+          <td><%= stat.ID_CLA %></td>
+          <td><%= stat.critere %></td>
+          <td><%= stat.moyenne %></td>
+        </tr>
+      <% }) %>
+    </table>
+  <% } %>
+  <a href="/dashboard">Retour</a>
+</body>
+</html>

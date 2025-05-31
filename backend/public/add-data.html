@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter des Données - ESI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem;
+        }
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .message {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Ajouter un Enseignant</h2>
+        <div class="form-group">
+            <label for="teacherNom">Nom</label>
+            <input type="text" id="teacherNom" placeholder="Nom de l'enseignant">
+        </div>
+        <div class="form-group">
+            <label for="teacherPrenom">Prénom</label>
+            <input type="text" id="teacherPrenom" placeholder="Prénom de l'enseignant">
+        </div>
+        <button onclick="addTeacher()">Ajouter Enseignant</button>
+        <div class="message" id="teacherMessage"></div>
+
+        <h2 style="margin-top: 2rem;">Ajouter une Matière</h2>
+        <div class="form-group">
+            <label for="matiereNom">Nom de la Matière</label>
+            <input type="text" id="matiereNom" placeholder="Nom de la matière">
+        </div>
+        <button onclick="addMatiere()">Ajouter Matière</button>
+        <div class="message" id="matiereMessage"></div>
+    </div>
+
+    <script>
+        async function addTeacher() {
+            const nom = document.getElementById('teacherNom').value;
+            const prenom = document.getElementById('teacherPrenom').value;
+            const messageEl = document.getElementById('teacherMessage');
+            try {
+                const response = await fetch('/api/add-teacher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nom, prenom })
+                });
+                const data = await response.json();
+                messageEl.textContent = data.message;
+                messageEl.style.color = data.success ? 'green' : 'red';
+            } catch (err) {
+                messageEl.textContent = 'Erreur serveur';
+                messageEl.style.color = 'red';
+            }
+        }
+
+        async function addMatiere() {
+            const nom_matiere = document.getElementById('matiereNom').value;
+            const messageEl = document.getElementById('matiereMessage');
+            try {
+                const response = await fetch('/api/add-matiere', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nom_matiere })
+                });
+                const data = await response.json();
+                messageEl.textContent = data.message;
+                messageEl.style.color = data.success ? 'green' : 'red';
+            } catch (err) {
+                messageEl.textContent = 'Erreur serveur';
+                messageEl.style.color = 'red';
+            }
+        }
+    </script>
+</body>
+</html>

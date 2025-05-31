@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saisie d’évaluation</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Saisie d’évaluation</h1>
+    <% if (message) { %>
+        <p style="color: green;"><%= message %></p>
+    <% } %>
+    <form action="/evaluation" method="POST">
+        <label>Enseignant :</label>
+        <select name="enseignant" required>
+            <% enseignants.forEach(ens => { %>
+                <option value="<%= ens.ID_ENS %>"><%= ens.Nom %></option>
+            <% }) %>
+        </select><br>
+        <label>Matière :</label>
+        <select name="matiere" required>
+            <% matieres.forEach(mat => { %>
+                <option value="<%= mat.ID_MAT %>"><%= mat.Nom_Matière %></option>
+            <% }) %>
+        </select><br>
+        <label>Classe :</label>
+        <select name="classe" required>
+            <% classes.forEach(cla => { %>
+                <option value="<%= cla.ID_CLA %>"><%= cla.Nom_Classe %></option>
+            <% }) %>
+        </select><br>
+        <h3>Critères</h3>
+        <% categories.forEach(cat => { %>
+            <h4><%= cat.Nom_Catégorie %></h4>
+            <% criteres.filter(crt => crt.ID_CAT === cat.ID_CAT).forEach(crt => { %>
+                <label><%= crt.Nom_Critère %> :</label>
+                <select name="criteres[<%= crt.ID_CRT %>]">
+                    <option value="20">20</option>
+                    <option value="10">10</option>
+                    <option value="5">5</option>
+                    <option value="0">0</option>
+                </select><br>
+            <% }) %>
+        <% }) %>
+        <label>Commentaire :</label>
+        <textarea name="commentaire"></textarea><br>
+        <button type="submit">Enregistrer</button>
+    </form>
+    <a href="/dashboard">Retour</a>
+</body>
+</html>

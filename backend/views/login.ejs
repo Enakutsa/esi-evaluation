@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Connexion</h1>
+    <% if (error) { %>
+        <p style="color: red;"><%= error %></p>
+    <% } %>
+    <form action="/login" method="POST">
+        <label>Nom d’utilisateur :</label>
+        <input type="text" name="username" required>
+        <label>Mot de passe :</label>
+        <input type="password" name="password" required>
+        <button type="submit">Se connecter</button>
+    </form>
+</body>
+</html>

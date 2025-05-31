@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Système d'Évaluation ESI - Maquette</title>
+  <style>
+    :root {
+      --primary: #1e40af; /* Bleu royal profond */
+      --primary-light: #3b82f6; /* Bleu plus clair */
+      --secondary: #0f766e; /* Vert-bleu foncé */
+      --accent: #f59e0b; /* Orange doré */
+      --bg-light: #f8fafc; /* Fond clair */
+      --bg-dark: #1e293b; /* Fond sombre */
+      --text-dark: #0f172a; /* Texte foncé */
+      --text-light: #f8fafc; /* Texte clair */
+      --success: #10b981; /* Vert succès */
+      --danger: #ef4444; /* Rouge danger */
+      --warning: #f59e0b; /* Orange avertissement */
+      --info: #3b82f6; /* Bleu information */
+      --neutral-100: #f1f5f9;
+      --neutral-200: #e2e8f0;
+      --neutral-300: #cbd5e1;
+      --neutral-400: #94a3b8;
+      --neutral-500: #64748b;
+      --neutral-600: #475569;
+      --neutral-700: #334155;
+      --neutral-800: #1e293b;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Navigation principale */
+    header {
+      background-color: var(--bg-dark);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-light);
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .logo-img {
+      width: 40px;
+      height: 40px;
+      background-color: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-light);
+      font-weight: bold;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    
+    .nav-item {
+      color: var(--neutral-300);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.5rem 0;
+      position: relative;
+      transition: color 0.3s;
+    }
+    
+    .nav-item:hover, .nav-item.active {
+      color: var(--text-light);
+    }
+    
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--accent);
+      border-radius: 3px;
+    }
+    
+    .user-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-light);
+      cursor: pointer;
+    }
+    
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-light);
+      font-weight: bold;
+    }
+    
+    /* Sidebar */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 70px);
+    }
+    
+    .sidebar {
+      width: 260px;
+      background-color: white;
+      box-shadow: 1px 0 5px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem 1rem;
+    }
+    
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      list-style: none;
+    }
+    
+    .menu-item {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--neutral-600);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    
+    .menu-item:hover {
+      background-color: var(--neutral-100);
+      color: var(--primary);
+    }
+    
+    .menu-item.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .menu-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .menu-section {
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      padding-left: 1rem;
+      color: var(--neutral-500);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    /* Main content */
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+      background-color: var(--bg-light);
+    }
+    
+    .page-header {
+      margin-bottom: 2rem;
+    }
+    
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+    
+    .page-subtitle {
+      color: var(--neutral-600);
+      font-size: 1rem;
+    }
+    
+    /* Cards */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    
+    .icon-blue {
+      background-color: var(--primary);
+    }
+    
+    .icon-green {
+      background-color: var(--secondary);
+    }
+    
+    .icon-orange {
+      background-color: var(--accent);
+    }
+    
+    .icon-red {
+      background-color: var(--danger);
+    }
+    
+    .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    .card-description {
+      color: var(--neutral-500);
+      font-size: 0.9rem;
+    }
+    
+    /* Buttons */
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .btn-secondary {
+      background-color: var(--secondary);
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-accent {
+      background-color: var(--accent);
+      color: white;
+    }
+    
+    .btn-accent:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--neutral-300);
+      color: var(--neutral-700);
+    }
+    
+    .btn-outline:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    /* Tables */
+    .table-container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--neutral-200);
+    }
+    
+    .table-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    
+    .table-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table th {
+      background-color: var(--neutral-100);
+      text-align: left;
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+      color: var(--neutral-700);
+      border-bottom: 1px solid var(--neutral-200);
+    }
+    
+    .data-table td {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--neutral-200);
+      color: var(--neutral-700);
+    }
+    
+    .data-table tbody tr:hover {
+      background-color: var(--neutral-100);
+    }
+    
+    .status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-block;
+    }
+    
+    .status-success {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+    }
+    
+    .status-pending {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+    }
+    
+    .status-failed {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+    
+    /* Form elements */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--neutral-700);
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--neutral-300);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    .form-select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--neutral-300);
+      border-radius: 8px;
+      font-size: 1rem;
+      background-color: white;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5l-6-6 1.5-1.5L8 8.5 12.5 4 14 5.5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 16px;
+    }
+    
+    .form-textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--neutral-300);
+      border-radius: 8px;
+      font-size: 1rem;
+      min-height: 120px;
+    }
+    
+    /* Rating Component */
+    .rating-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto auto;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+    }
+    
+    .rating-grid:nth-child(odd) {
+      background-color: var(--neutral-100);
+    }
+    
+    .rating-label {
+      font-weight: 500;
+    }
+    
+    .rating-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .rating-radio {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+    
+    /* Charts */
+    .chart-container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .chart-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    
+    .chart-canvas {
+      width: 100%;
+      height: 300px;
+      background-color: var(--neutral-100);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Dashboard specific */
+    .stat-change {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .stat-positive {
+      color: var(--success);
+    }
+
+    .stat-negative {
+      color: var(--danger);
+    }
+
+    /* Evaluation form styling */
+    .evaluation-form {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+    }
+
+    .form-header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .form-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-subtitle {
+      color: var(--neutral-600);
+    }
+
+    .section-header {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin: 2rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--primary-light);
+    }
+
+    .criteria-container {
+      margin-bottom: 2rem;
+    }
+
+    .criteria-option {
+      padding: 0.3rem 0;
+    }
+
+    .rating-header {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto auto;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      padding: 0 1rem;
+      font-weight: 500;
+      color: var(--neutral-600);
+      font-size: 0.9rem;
+    }
+
+    .rating-header span:not(:first-child) {
+      text-align: center;
+    }
+
+    .form-actions {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--neutral-200);
+      padding-bottom: 1px;
+    }
+
+    .tab {
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--neutral-600);
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab:hover {
+      color: var(--primary);
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Page d'accueil/Dashboard -->
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <div class="logo-img">ESI</div>
+        <span>Système d'Évaluation ESI</span>
+      </div>
+      <div class="nav-links">
+        <a href="#" class="nav-item active">Accueil</a>
+        <a href="#" class="nav-item">Évaluations</a>
+        <a href="#" class="nav-item">Enseignants</a>
+        <a href="#" class="nav-item">Statistiques</a>
+        <a href="#" class="nav-item">Rapports</a>
+      </div>
+      <div class="user-actions">
+        <div class="user-profile">
+          <div class="avatar">AD</div>
+          <span>Admin</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <ul class="sidebar-menu">
+        <li><a href="#" class="menu-item active">
+          <div class="menu-icon">📊</div>
+          <span>Tableau de bord</span>
+        </a></li>
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">📝</div>
+          <span>Saisir une évaluation</span>
+        </a></li>
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">📋</div>
+          <span>Liste des évaluations</span>
+        </a></li>
+      </ul>
+
+      <div class="menu-section">Gestion</div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">👨‍🏫</div>
+          <span>Enseignants</span>
+        </a></li>
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">📚</div>
+          <span>Matières</span>
+        </a></li>
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">🏫</div>
+          <span>Classes</span>
+        </a></li>
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">👨‍🎓</div>
+          <span>Étudiants</span>
+        </a></li>
+      </ul>
+
+      <div class="menu-section">Analyse</div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">📊</div>
+          <span>Statistiques</span>
+        </a></li>
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">🏆</div>
+          <span>Classements</span>
+        </a></li>
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">📈</div>
+          <span>Rapports</span>
+        </a></li>
+      </ul>
+
+      <div class="menu-section">Paramètres</div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">⚙️</div>
+          <span>Configuration</span>
+        </a></li>
+        <li><a href="#" class="menu-item">
+          <div class="menu-icon">👥</div>
+          <span>Utilisateurs</span>
+        </a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Tableau de bord</h1>
+        <p class="page-subtitle">Vue d'ensemble du système d'évaluation</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Évaluations</h3>
+            <div class="card-icon icon-blue">📝</div>
+          </div>
+          <div class="card-value">1,248</div>
+          <div class="card-description">évaluations complétées cette année</div>
+          <div class="stat-change stat-positive">
+            ↑ 12% depuis le mois dernier
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Enseignants</h3>
+            <div class="card-icon icon-green">👨‍🏫</div>
+          </div>
+          <div class="card-value">86</div>
+          <div class="card-description">enseignants évalués</div>
+          <div class="stat-change stat-positive">
+            ↑ 3% depuis le mois dernier
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Score moyen</h3>
+            <div class="card-icon icon-orange">⭐</div>
+          </div>
+          <div class="card-value">16.8</div>
+          <div class="card-description">score moyen (sur 20)</div>
+          <div class="stat-change stat-positive">
+            ↑ 0.7 depuis le mois dernier
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Matières</h3>
+            <div class="card-icon icon-red">📚</div>
+          </div>
+          <div class="card-value">124</div>
+          <div class="card-description">matières évaluées</div>
+          <div class="stat-change stat-positive">
+            ↑ 5% depuis le mois dernier
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3 class="chart-title">Évolution des évaluations</h3>
+          <div class="btn btn-outline">Année 2024-2025</div>
+        </div>
+        <div class="chart-canvas">
+          [Graphique d'évolution des évaluations]
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h3 class="table-title">Top 5 des enseignants</h3>
+          <div class="table-actions">
+            <button class="btn btn-outline">Exporter</button>
+            <button class="btn btn-primary">Voir tout</button>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Matière</th>
+              <th>Classe</th>
+              <th>Score moyen</th>
+              <th>Point fort</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dr. Amadou Diallo</td>
+              <td>Algorithmes avancés</td>
+              <td>DA-3</td>
+              <td>19.2/20</td>
+              <td>Clarté du cours</td>
+              <td>
+                <button class="btn btn-outline">Détails</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Prof. Marie Koné</td>
+              <td>Intelligence Artificielle</td>
+              <td>SRI-3</td>
+              <td>18.9/20</td>
+              <td>Relations avec les apprenants</td>
+              <td>
+                <button class="btn btn-outline">Détails</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Dr. Emmanuel Osei</td>
+              <td>Systèmes distribués</td>
+              <td>DA-2</td>
+              <td>18.5/20</td>
+              <td>Organisation du cours</td>
+              <td>
+                <button class="btn btn-outline">Détails</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Prof. Aïcha Bello</td>
+              <td>Sécurité informatique</td>
+              <td>SRI-2</td>
+              <td>18.3/20</td>
+              <td>Explications</td>
+              <td>
+                <button class="btn btn-outline">Détails</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Dr. Thomas Mensah</td>
+              <td>Architecture des SI</td>
+              <td>DA-3</td>
+              <td>18.1/20</td>
+              <td>Intérêt pour son cours</td>
+              <td>
+                <button class="btn btn-outline">Détails</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Page de saisie d'évaluation -->
+  <div style="display: none;">
+    <header>
+      <!-- [Même navigation que la page précédente] -->
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <!-- [Même sidebar que la page précédente] -->
+      </aside>
+
+      <main class="main-content">
+        <div class="page-header">
+          <h1 class="page-title">Formulaire d'évaluation</h1>
+          <p class="page-subtitle">Saisie d'une nouvelle évaluation</p>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active">Formulaire</div>
+          <div class="tab">Importation en lot</div>
+        </div>
+
+        <div class="evaluation-form">
+          <div class="form-header">
+            <h2 class="form-title">Évaluation des enseignements</h2>
+            <p class="form-subtitle">Année académique 2024-2025</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Nom de l'enseignant</label>
+              <select class="form-select">
+                <option>Sélectionner un enseignant</option>
+                <option>Dr. Amadou Diallo</option>
+                <option>Prof. Marie Koné</option>
+                <option>Dr. Emmanuel Osei</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Matière</label>
+              

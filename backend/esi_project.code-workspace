@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../fronted esi"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "fronted esi"
+	}
+}
