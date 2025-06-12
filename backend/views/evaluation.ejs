@@ -3,50 +3,474 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saisie d’évaluation</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Évaluation des Enseignants - Espoir 2025</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .eval-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f9f9f9;
+            transition: border-color 0.3s;
+        }
+
+        .form-group select:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.5);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        td {
+            background: #fafafa;
+            transition: background 0.3s;
+        }
+
+        td:hover {
+            background: #f0f0f0;
+        }
+
+        .criteria-cell {
+            text-align: left;
+            font-weight: 500;
+            color: #333;
+        }
+
+        input[type="radio"] {
+            accent-color: #667eea;
+            transform: scale(1.2);
+            margin: 0 5px;
+            cursor: pointer;
+        }
+
+        .rating-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            position: relative;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .rating-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .rating-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+            color: #333;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #message {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        #message.success { color: #28a745; }
+        #message.error { color: #dc3545; }
+    </style>
 </head>
 <body>
-    <h1>Saisie d’évaluation</h1>
-    <% if (message) { %>
-        <p style="color: green;"><%= message %></p>
-    <% } %>
-    <form action="/evaluation" method="POST">
-        <label>Enseignant :</label>
-        <select name="enseignant" required>
-            <% enseignants.forEach(ens => { %>
-                <option value="<%= ens.ID_ENS %>"><%= ens.Nom %></option>
-            <% }) %>
-        </select><br>
-        <label>Matière :</label>
-        <select name="matiere" required>
-            <% matieres.forEach(mat => { %>
-                <option value="<%= mat.ID_MAT %>"><%= mat.Nom_Matière %></option>
-            <% }) %>
-        </select><br>
-        <label>Classe :</label>
-        <select name="classe" required>
-            <% classes.forEach(cla => { %>
-                <option value="<%= cla.ID_CLA %>"><%= cla.Nom_Classe %></option>
-            <% }) %>
-        </select><br>
-        <h3>Critères</h3>
-        <% categories.forEach(cat => { %>
-            <h4><%= cat.Nom_Catégorie %></h4>
-            <% criteres.filter(crt => crt.ID_CAT === cat.ID_CAT).forEach(crt => { %>
-                <label><%= crt.Nom_Critère %> :</label>
-                <select name="criteres[<%= crt.ID_CRT %>]">
-                    <option value="20">20</option>
-                    <option value="10">10</option>
-                    <option value="5">5</option>
-                    <option value="0">0</option>
-                </select><br>
-            <% }) %>
-        <% }) %>
-        <label>Commentaire :</label>
-        <textarea name="commentaire"></textarea><br>
-        <button type="submit">Enregistrer</button>
-    </form>
-    <a href="/dashboard">Retour</a>
+    <div class="eval-container">
+        <button onclick="window.location.href='index.html'" class="back-btn">Retour à l'accueil</button>
+        <h1>Évaluation des Enseignants</h1>
+        <form id="evalForm">
+            <!-- Sélection enseignant, matière, classe -->
+            <div class="form-group">
+                <label>Enseignant :</label>
+                <select name="enseignant" required>
+                    <option value="">Sélectionnez un enseignant</option>
+                    <option value="ENS_001">AKANATE Alassani</option>
+                    <option value="ENS_002">AGBODZAN Mato</option>
+                    <option value="ENS_003">DAVON Prof_SI</option>
+                    <option value="ENS_004">ANOUSSOUVI Marcel</option>
+                    <option value="ENS_005">AHAMADOU Kodzo</option>
+                    <option value="ENS_006">TALL Kokou</option>
+                    <option value="ENS_007">LAWSON Justin</option>
+                    <option value="ENS_008">Dourma Mr</option>
+                    <option value="ENS_009">Akoro Dr</option>
+                    <option value="ENS_010">Agboli</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Matière :</label>
+                <select name="matiere" required>
+                    <option value="">Sélectionnez une matière</option>
+                    <option value="MAT_001">Java</option>
+                    <option value="MAT_002">Mathématiques</option>
+                    <option value="MAT_003">SI</option>
+                    <option value="MAT_004">Outils Techniques</option>
+                    <option value="MAT_005">Algorithme</option>
+                    <option value="MAT_006">Analyse Numérique</option>
+                    <option value="MAT_007">Langage C</option>
+                    <option value="MAT_008">Compression et Échantillonnage</option>
+                    <option value="MAT_009">Transmission sur Support Optique</option>
+                    <option value="MAT_010">Linux</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Classe :</label>
+                <select name="classe" required>
+                    <option value="">Sélectionnez une classe</option>
+                    <option value="CLA_001">DA</option>
+                    <option value="CLA_002">SI</option>
+                    <option value="CLA_003">SRI</option>
+                </select>
+            </div>
+
+            <!-- Les sections avec critères -->
+        </form>
+    </div>
+
+    <script>
+        const sections = [
+            {
+                title: "🧠 I. Intérêt de l’enseignant pour son cours",
+                description: "L’enseignant(e)…",
+                questions: [
+                    "Cherche à donner l’envie d’apprendre",
+                    "Fait preuve d’humour",
+                    "Utilise différents supports pédagogiques",
+                    "Lit ses notes ou un document écrit",
+                    "Suggère des implications pratiques",
+                    "Donne son point de vue personnel",
+                    "Fait preuve de conviction dans son cours",
+                    "Montre de l’intérêt et de l’enthousiasme"
+                ]
+            },
+            {
+                title: "🗣️ II. Clarté du cours",
+                description: "L’enseignant(e)…",
+                questions: [
+                    "Utilise un débit de parole approprié",
+                    "Parle d’une voix non monotone",
+                    "S’exprime clairement",
+                    "Avance dans son cours à une vitesse mesurée"
+                ]
+            },
+            {
+                title: "🤝 III. Relations avec les apprenants",
+                description: "L’enseignant(e)…",
+                questions: [
+                    "Montre de l’intérêt pour les apprenants",
+                    "Accepte les points de vue divergents",
+                    "Apporte de l’aide en cas d’incompréhension",
+                    "Montre du respect envers les apprenants",
+                    "Est d’un contact facile (est disponible)",
+                    "Maintient la discipline dans la classe",
+                    "Tolère les retards aux cours",
+                    "Sanctionne les absences non justifiées au cours précédent"
+                ]
+            },
+            {
+                title: "📚 IV. Organisation du cours",
+                description: "L’enseignant(e)…",
+                questions: [
+                    "Présente les objectifs du cours à atteindre",
+                    "Dispense le cours de manière organisée",
+                    "Donne des documents de travail",
+                    "Fait des transitions logiques entre les compétences à acquérir",
+                    "Fait des synthèses utiles lors de son cours",
+                    "Fait preuve de rigueur dans ses horaires de cours (début et fin)"
+                ]
+            },
+            {
+                title: "🙋‍♂️ V. Incitation à la participation",
+                description: "L’enseignant(e)…",
+                questions: [
+                    "Encourage les questions et les commentaires",
+                    "Interroge individuellement les apprenants",
+                    "Pose des questions à la classe entière",
+                    "Incite les apprenants à interagir",
+                    "Pose des questions complexes",
+                    "Crée une ambiance à la fois animée et ordonnée",
+                    "Maintient en éveil l’attention des apprenants"
+                ]
+            },
+            {
+                title: "💡 VI. Explications",
+                description: "L’enseignant(e)…",
+                questions: [
+                    "Utilise des explications",
+                    "Répète ce qui est difficile",
+                    "Souligne les points centraux",
+                    "Donne des détails",
+                    "Identifie les points clés",
+                    "Donne des travaux de maison pour la compréhension du cours",
+                    "Fait des corrections ponctuelles des devoirs/travaux rendus"
+                ]
+            },
+            {
+                title: "👨‍🎓 VII. Attitude des apprenants (auto-perception)",
+                description: "Les apprenants…",
+                questions: [
+                    "Sont attentifs et appliqués",
+                    "Participent activement aux cours",
+                    "Respectent l’enseignant(e)",
+                    "Sont motivés par le cours"
+                ]
+            }
+        ];
+
+        const form = document.getElementById('evalForm');
+
+        // Générer les sections avec tableaux
+        sections.forEach((section, sectionIndex) => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section';
+            sectionDiv.innerHTML = `<h2>${section.title}</h2>`;
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            thead.innerHTML = `
+                <tr>
+                    <th>Critère</th>
+                    <th>Toujours (20 pts)</th>
+                    <th>Souvent (10 pts)</th>
+                    <th>Rarement (5 pts)</th>
+                    <th>Jamais (0 pt)</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+
+            section.questions.forEach((question, questionIndex) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="criteria-cell">${question}</td>
+                    <td><input type="radio" name="section${sectionIndex + 1}_q${questionIndex + 1}" value="20" required></td>
+                    <td><input type="radio" name="section${sectionIndex + 1}_q${questionIndex + 1}" value="10"></td>
+                    <td><input type="radio" name="section${sectionIndex + 1}_q${questionIndex + 1}" value="5"></td>
+                    <td><input type="radio" name="section${sectionIndex + 1}_q${questionIndex + 1}" value="0"></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            sectionDiv.appendChild(table);
+            form.appendChild(sectionDiv);
+        });
+
+        // Ajouter la section commentaires
+        const commentsSection = document.createElement('div');
+        commentsSection.className = 'section';
+        commentsSection.innerHTML = '<h2>✏️ VIII. Autres commentaires</h2><textarea name="commentaire" placeholder="Vos commentaires..."></textarea>';
+        form.appendChild(commentsSection);
+
+        // Ajouter la barre de progression
+        const ratingBar = document.createElement('div');
+        ratingBar.className = 'rating-bar';
+        ratingBar.innerHTML = '<div class="rating-bar-fill" id="ratingBarFill"></div><span class="rating-text" id="ratingText">0.00</span>';
+        form.appendChild(ratingBar);
+
+        // Ajouter le bouton de soumission
+        const submitButton = document.createElement('button');
+        submitButton.type = 'submit';
+        submitButton.className = 'submit-btn';
+        submitButton.textContent = 'Soumettre l\'évaluation';
+        form.appendChild(submitButton);
+
+        // Mettre à jour la note en temps réel
+        form.addEventListener('change', function(e) {
+            if (e.target.type === 'radio') {
+                updateRating();
+            }
+        });
+
+        function updateRating() {
+            const selected = form.querySelectorAll('input[type="radio"]:checked');
+            if (selected.length === 0) {
+                document.getElementById('ratingBarFill').style.width = '0%';
+                document.getElementById('ratingText').textContent = '0.00';
+                return;
+            }
+            let total = 0;
+            selected.forEach(input => total += parseInt(input.value));
+            const average = total / selected.length;
+            const pourcentage = (average / 20) * 100;
+            document.getElementById('ratingBarFill').style.width = `${pourcentage}%`;
+            document.getElementById('ratingText').textContent = average.toFixed(2);
+        }
+
+        // Soumission du formulaire avec redirection
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            const messageDiv = document.createElement('div');
+            messageDiv.id = 'message';
+            form.appendChild(messageDiv);
+            try {
+                const response = await fetch('/evaluation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    messageDiv.className = 'success';
+                    messageDiv.textContent = 'Évaluation soumise avec succès !';
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    messageDiv.className = 'error';
+                    messageDiv.textContent = result.message || 'Erreur lors de l’envoi.';
+                }
+            } catch (err) {
+                messageDiv.className = 'error';
+                messageDiv.textContent = 'Problème de connexion au serveur.';
+            }
+        });
+    </script>
 </body>
 </html>

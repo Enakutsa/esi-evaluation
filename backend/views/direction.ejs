@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direction - ESI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; flex-direction: column; gap: 0.5rem; }
+        .datetime { font-size: 1rem; opacity: 0.8; }
+        .nav { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .nav-tabs { display: flex; gap: 1rem; }
+        .nav-tab { padding: 0.8rem 1.5rem; background: #f8f9fa; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .nav-tab.active, .nav-tab:hover { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .content { padding: 0 2rem; }
+        .data-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .table-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; }
+        .table-content { padding: 2rem; }
+        table { width: 100%; border-collapse: collapse; }
+        table th, table td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+        table th { background: #f8f9fa; font-weight: bold; }
+        .hidden { display: none; }
+        .back-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 25px; cursor: pointer; transition: all 0.3s; }
+        .back-btn:hover { background: rgba(255,255,255,0.3); transform: translateX(-5px); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>📊 Tableau de Direction</h1>
+            <span class="datetime" id="datetime"></span>
+        </div>
+        <button class="back-btn" onclick="window.location.href='/logout'">Déconnexion</button>
+    </div>
+
+    <div class="nav">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('overview')">Vue d'Ensemble</button>
+            <button class="nav-tab" onclick="showTab('reports')">Rapports</button>
+            <button class="nav-tab" onclick="showTab('trends')">Tendances</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="overviewTab" class="tab-content">
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>📈 Statistiques Globales</h3>
+                </div>
+                <div class="table-content">
+                    <table id="overviewTable">
+                        <thead>
+                            <tr>
+                                <th>Catégorie</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overviewBody">
+                            <!-- Rempli dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportsTab" class="tab-content hidden">
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>📋 Détails des Rapports</h3>
+                </div>
+                <div class="table-content">
+                    <table id="reportsTable">
+                        <thead>
+                            <tr>
+                                <th>Matière</th>
+                                <th>Enseignant</th>
+                                <th>Score Participation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsBody">
+                            <!-- Rempli dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="trendsTab" class="tab-content hidden">
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>📊 Tendances des Évaluations</h3>
+                </div>
+                <div class="table-content">
+                    <table id="trendsTable">
+                        <thead>
+                            <tr>
+                                <th>Mois</th>
+                                <th>Nombre d'Évaluations</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trendsBody">
+                            <!-- Rempli dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const day = days[now.getUTCDay()];
+            const date = now.getUTCDate();
+            const month = now.toLocaleString('default', { month: 'long', timeZone: 'UTC' });
+            const year = now.getUTCFullYear();
+            const hours = now.getUTCHours() % 12 || 12;
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            const period = now.getUTCHours() >= 12 ? 'PM' : 'AM';
+            document.getElementById('datetime').textContent = `Today's date and time is ${hours}:${minutes} ${period} GMT on ${day}, ${month} ${date}, ${year}.`;
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.getElementById(tabId + 'Tab').classList.remove('hidden');
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
+        async function loadOverview() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                const overviewBody = document.getElementById('overviewBody');
+                overviewBody.innerHTML = `
+                    <tr><td>Évaluations Reçues</td><td>${data.evaluations}</td></tr>
+                    <tr><td>Enseignants Évalués</td><td>${data.teachers}</td></tr>
+                    <tr><td>Matières Couvertes</td><td>${data.matieres}</td></tr>
+                    <tr><td>Taux de Satisfaction</td><td>${data.satisfaction}</td></tr>
+                `;
+            } catch (err) {
+                console.error('Erreur chargement overview:', err);
+            }
+        }
+
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/reports');
+                const data = await response.json();
+                const reportsBody = document.getElementById('reportsBody');
+                reportsBody.innerHTML = data.map(report =>
+                    `<tr><td>${report.nom_matiere}</td><td>${report.nom} ${report.prenom}</td><td>${(report.participation_score / 20 * 100).toFixed(1)}/20</td></tr>`
+                ).join('');
+            } catch (err) {
+                console.error('Erreur chargement reports:', err);
+            }
+        }
+
+        async function loadTrends() {
+            try {
+                // Exemple simple : compter les évaluations par mois (à ajuster avec une vraie requête SQL)
+                const response = await fetch('/api/trends'); // Nouvelle API à créer
+                const data = await response.json();
+                const trendsBody = document.getElementById('trendsBody');
+                trendsBody.innerHTML = data.map(trend =>
+                    `<tr><td>${trend.month}</td><td>${trend.count}</td></tr>`
+                ).join('');
+            } catch (err) {
+                console.error('Erreur chargement trends:', err);
+            }
+        }
+
+        async function refreshAll() {
+            await Promise.all([loadOverview(), loadReports(), loadTrends()]);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            refreshAll();
+            setInterval(refreshAll, 30000);
+        });
+    </script>
+</body>
+</html>

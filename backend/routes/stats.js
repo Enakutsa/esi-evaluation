@@ -1,41 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../app');
 
 router.get('/stats', async (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-    const { id_enseignant, id_classe, date_debut, date_fin } = req.query;
-
-    let query = `
-        SELECT e.ID_ENS, e.ID_CLA, AVG(n.Note) as moyenne, c.Nom as critere
-        FROM Évaluation e
-        JOIN Noter n ON e.ID_EVA = n.ID_EVA
-        JOIN Critère c ON n.ID_CRT = c.ID_CRT
-        WHERE 1=1
-    `;
-    const params = [];
-
-    if (id_enseignant) {
-        query += ' AND e.ID_ENS = ?';
-        params.push(id_enseignant);
-    }
-    if (id_classe) {
-        query += ' AND e.ID_CLA = ?';
-        params.push(id_classe);
-    }
-    if (date_debut && date_fin) {
-        query += ' AND e.Date_Évaluation BETWEEN ? AND ?';
-        params.push(date_debut, date_fin);
-    }
-    query += ' GROUP BY e.ID_ENS, e.ID_CLA, c.Nom';
-
     try {
-        const [rows] = await db.execute(query, params);
-        res.render('stats', { user: req.session.user, stats: rows, filters: req.query });
+        const [evalCount] = await req.db.execute('SELECT COUNT(*) as count FROM evaluation');
+        const [teacherCount] = await req.db.execute('SELECT COUNT(DISTINCT ev.id_ens) as count FROM evaluation ev');
+        const [matiereCount] = await req.db.execute('SELECT COUNT(*) as count FROM matiere');
+        const [avgScore] = await req.db.execute(`
+            SELECT AVG(n.note) as avg_score FROM evaluation e
+            JOIN noter n ON e.id_eva = n.id_eva
+        `);
+        const avg = avgScore[0].avg_score || 0;
+        res.json({
+            evaluations: evalCount[0].count,
+            teachers: teacherCount[0].count,
+            matieres: matiereCount[0].count,
+            satisfaction: (avg / 20 * 100).toFixed(0) + '%'
+        });
     } catch (err) {
-        console.error('Erreur stats:', err);
-        res.render('stats', { user: req.session.user, stats: [], error: 'Erreur lors du chargement' });
+        console.error('Erreur /api/stats:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
+
+// Ajoute les autres endpoints (scores-by-criteria, rankings, etc.) en remplaçant db par req.db
 
 module.exports = router;

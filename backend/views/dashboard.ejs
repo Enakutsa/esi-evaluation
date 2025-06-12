@@ -3,15 +3,395 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Tableau de Bord - ESI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .datetime {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .dashboard-nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-tab {
+            padding: 0.8rem 1.5rem;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-tab.active,
+        .nav-tab:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .dashboard-content {
+            padding: 0 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+        }
+
+        .table-content {
+            padding: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-5px);
+        }
+    </style>
 </head>
 <body>
-    <h1>Bienvenue, <%= user.role %>!</h1>
-    <p>ID Utilisateur : <%= user.id %></p>
-    <a href="/evaluation">Saisir une évaluation</a><br>
-    <a href="/stats">Voir les statistiques</a><br>
-    <a href="/logout">Déconnexion</a>
+    <div class="dashboard-header">
+        <div class="header-left">
+            <h1>🎯 Tableau de Bord Administrateur</h1>
+            <span class="datetime" id="datetime">Today's date and time is 12:02 PM GMT on Monday, May 26, 2025.</span>
+        </div>
+        <button class="back-btn" onclick="window.location.href='/logout'">Déconnexion</button>
+    </div>
 
+    <div class="dashboard-nav">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('stats')">📊 Statistiques</button>
+            <button class="nav-tab" onclick="showTab('rankings')">🏆 Classements</button>
+            <button class="nav-tab" onclick="showTab('reports')">📋 Rapports</button>
+            <button class="nav-tab" onclick="showTab('teachers')">👨‍🏫 Enseignants</button>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div id="statsTab" class="tab-content">
+            <div class="stats-grid" id="statsGrid">
+                <!-- Les stats seront remplies dynamiquement -->
+            </div>
+
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>📈 Scores Moyens par Critère</h3>
+                </div>
+                <div class="table-content">
+                    <table id="scoresTable">
+                        <thead>
+                            <tr>
+                                <th>Critère d'Évaluation</th>
+                                <th>Score Moyen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoresBody">
+                            <!-- Rempli dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="rankingsTab" class="tab-content hidden">
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>🏆 Classement des Enseignants</h3>
+                </div>
+                <div class="table-content">
+                    <table id="rankingsTable">
+                        <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Enseignant</th>
+                                <th>Score Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingsBody">
+                            <!-- Rempli dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportsTab" class="tab-content hidden">
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>📊 Enseignements Bien Animés</h3>
+                </div>
+                <div class="table-content">
+                    <table id="reportsTable">
+                        <thead>
+                            <tr>
+                                <th>Matière</th>
+                                <th>Enseignant</th>
+                                <th>Score Participation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsBody">
+                            <!-- Rempli dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="teachersTab" class="tab-content hidden">
+            <div class="data-table">
+                <div class="table-header">
+                    <h3>👨‍🏫 Liste des Enseignants</h3>
+                </div>
+                <div class="table-content">
+                    <table id="teachersTable">
+                        <thead>
+                            <tr>
+                                <th>Enseignant</th>
+                                <th>Matières Enseignées</th>
+                                <th>Score Moyen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teachersBody">
+                            <!-- Rempli dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fonction pour formater et mettre à jour la date et l'heure
+        function updateDateTime() {
+            const now = new Date();
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const day = days[now.getUTCDay()];
+            const date = now.getUTCDate();
+            const month = now.toLocaleString('default', { month: 'long', timeZone: 'UTC' });
+            const year = now.getUTCFullYear();
+            const hours = now.getUTCHours() % 12 || 12;
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            const period = now.getUTCHours() >= 12 ? 'PM' : 'AM';
+            
+            const formattedDateTime = `Today's date and time is ${hours}:${minutes} ${period} GMT on ${day}, ${month} ${date}, ${year}.`;
+            document.getElementById('datetime').textContent = formattedDateTime;
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.getElementById(tabId + 'Tab').classList.remove('hidden');
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
+        // Fonction pour charger les stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${data.evaluations}</div>
+                        <div class="stat-label">Évaluations Reçues</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${data.teachers}</div>
+                        <div class="stat-label">Enseignants Évalués</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${data.matieres}</div>
+                        <div class="stat-label">Matières Couvertes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${data.satisfaction}</div>
+                        <div class="stat-label">Taux de Satisfaction</div Led>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Erreur chargement stats:', err);
+            }
+        }
+
+        // Fonction pour charger les scores moyens par critère
+        async function loadScores() {
+            try {
+                const response = await fetch('/api/scores-by-criteria');
+                const criteria = await response.json();
+                const scoresBody = document.getElementById('scoresBody');
+                scoresBody.innerHTML = Object.entries(criteria).map(([critere, score]) =>
+                    `<tr><td>${critere}</td><td><strong>${score.toFixed(1)}/20</strong></td></tr>`
+                ).join('');
+            } catch (err) {
+                console.error('Erreur chargement scores:', err);
+            }
+        }
+
+        // Fonction pour charger le classement
+        async function loadRankings() {
+            try {
+                const response = await fetch('/api/rankings');
+                const data = await response.json();
+                const rankingsBody = document.getElementById('rankingsBody');
+                rankingsBody.innerHTML = data.map((teacher, index) =>
+                    `<tr><td><strong>🥇 ${index + 1}</strong></td><td><strong>${teacher.nom} ${teacher.prenom}</strong></td><td><strong>${(teacher.score_moyen / 20 * 100).toFixed(1)}/20</strong></td></tr>`
+                ).slice(0, 5).join('');
+            } catch (err) {
+                console.error('Erreur chargement rankings:', err);
+            }
+        }
+
+        // Fonction pour charger les rapports
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/reports');
+                const data = await response.json();
+                const reportsBody = document.getElementById('reportsBody');
+                reportsBody.innerHTML = data.map(report =>
+                    `<tr><td>${report.nom_matiere}</td><td>${report.nom} ${report.prenom}</td><td><strong>${(report.participation_score / 20 * 100).toFixed(1)}/20</strong></td></tr>`
+                ).join('');
+            } catch (err) {
+                console.error('Erreur chargement reports:', err);
+            }
+        }
+
+        // Fonction pour charger la liste des enseignants
+        async function loadTeachers() {
+            try {
+                const response = await fetch('/api/teachers');
+                const data = await response.json();
+                const teachersBody = document.getElementById('teachersBody');
+                teachersBody.innerHTML = data.map(teacher =>
+                    `<tr><td><strong>${teacher.nom} ${teacher.prenom}</strong></td><td>${teacher.matieres}</td><td><strong>${(teacher.score_moyen / 20 * 100).toFixed(1)}/20</strong></td></tr>`
+                ).join('');
+            } catch (err) {
+                console.error('Erreur chargement teachers:', err);
+            }
+        }
+
+        // Fonction pour tout recharger
+        async function refreshAll() {
+            await Promise.all([
+                loadStats(),
+                loadScores(),
+                loadRankings(),
+                loadReports(),
+                loadTeachers()
+            ]);
+        }
+
+        // Charger toutes les données au démarrage, rafraîchir toutes les 30 secondes, et mettre à jour l'heure toutes les secondes
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDateTime(); // Charger la date et l'heure initiales
+            setInterval(updateDateTime, 1000); // Mettre à jour l'heure toutes les secondes
+            refreshAll(); // Chargement initial des données
+            setInterval(refreshAll, 30000); // Rafraîchir les données toutes les 30 secondes
+        });
+    </script>
 </body>
 </html>
