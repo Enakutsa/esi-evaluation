@@ -8,6 +8,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 require('dotenv').config();
 
 const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
@@ -69,11 +70,32 @@ app.get('/api-docs.json', (req, res) => {
     res.send(swaggerDocs);
 });
 
+// Middleware pour vérifier l'authentification
+const isAuthenticated = (req, res, next) => {
+    console.log('Vérification authentification:', req.session);
+    if (!req.session || !req.session.user || !req.session.user.id) {
+        console.error('Erreur: Utilisateur non authentifié ou session manquante');
+        return res.status(401).json({ success: false, message: 'Utilisateur non authentifié. Veuillez vous connecter.' });
+    }
+    console.log('Utilisateur authentifié:', req.session.user.id);
+    next();
+};
+
 // Middleware de validation pour les évaluations
 const validateEvaluation = (req, res, next) => {
     const { enseignant, matiere, classe } = req.body;
+    console.log('Données reçues dans validateEvaluation:', { enseignant, matiere, classe });
     if (!enseignant || !matiere || !classe) {
+        console.error('Erreur: Champs obligatoires manquants', { enseignant, matiere, classe });
         return res.status(400).json({ success: false, message: 'Tous les champs (enseignant, matière, classe) sont obligatoires' });
+    }
+    const criteria = Object.entries(req.body).filter(([key, val]) => key.startsWith('section') && val !== undefined);
+    for (const [key, note] of criteria) {
+        const parsedNote = parseInt(note);
+        if (isNaN(parsedNote) || parsedNote < 0 || parsedNote > 20) {
+            console.error(`Erreur: Note invalide pour ${key}: ${note}`);
+            return res.status(400).json({ success: false, message: `Les notes doivent être des entiers entre 0 et 20 (erreur sur ${key})` });
+        }
     }
     next();
 };
@@ -121,7 +143,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    console.log('Tentative de login avec email:', email); // Débogage
+    console.log('Tentative de login avec email:', email);
     if (!email || !password) {
         return res.status(400).send('Email et mot de passe requis');
     }
@@ -129,17 +151,17 @@ app.post('/login', async (req, res) => {
     try {
         const [users] = await db.execute('SELECT * FROM utilisateurs WHERE email = ?', [email]);
         if (users.length === 0) {
-            console.log('Utilisateur non trouvé pour email:', email); // Débogage
+            console.log('Utilisateur non trouvé pour email:', email);
             return res.status(401).send('Utilisateur non trouvé');
         }
 
         const user = users[0];
-        console.log('Utilisateur trouvé - Profil:', user.profil); // Débogage
+        console.log('Utilisateur trouvé - Profil:', user.profil, 'ID:', user.id);
         const match = await bcrypt.compare(password, user.mot_de_passe_hash);
-        console.log('Correspondance avec le mot de passe:', match); // Débogage
+        console.log('Correspondance avec le mot de passe:', match);
         if (match) {
             req.session.user = { id: user.id, profil: user.profil, email: user.email };
-            console.log('Session créée pour profil:', user.profil); // Débogage
+            console.log('Session créée pour utilisateur:', req.session.user);
             if (user.profil === 'Direction') {
                 return res.redirect('/direction');
             } else if (user.profil === 'Admin') {
@@ -177,28 +199,62 @@ app.get('/evaluation', async (req, res) => {
     }
 });
 
-app.post('/evaluation', validateEvaluation, async (req, res) => {
+// Route pour soumettre une évaluation
+app.post('/evaluation', isAuthenticated, validateEvaluation, async (req, res) => {
     const { enseignant, matiere, classe, ...criteria } = req.body;
-    const commentaire = req.body.commentaire || '';
+    const commentaire = req.body.commentaire ? String(req.body.commentaire).trim() : '';
     let connection;
     try {
+        console.log('Début POST /evaluation', {
+            enseignant,
+            matiere,
+            classe,
+            userId: req.session.user.id,
+            commentaireLength: commentaire.length
+        });
+
         connection = await db.getConnection();
         await connection.beginTransaction();
 
+        // Vérifier l'existence de l'utilisateur
+        console.log('Vérification utilisateur avec id:', req.session.user.id);
+        const [userCheck] = await connection.execute('SELECT id FROM utilisateurs WHERE id = ?', [req.session.user.id]);
+        if (userCheck.length === 0) {
+            throw new Error('Utilisateur invalide');
+        }
+
+        // Vérifier les clés étrangères
+        console.log('Vérification clés étrangères:', { enseignant, matiere, classe });
         const [enseignantCheck] = await connection.execute('SELECT id_ens FROM enseignant WHERE id_ens = ?', [enseignant]);
         const [matiereCheck] = await connection.execute('SELECT id_mat FROM matiere WHERE id_mat = ?', [matiere]);
         const [classeCheck] = await connection.execute('SELECT id_cla FROM classe WHERE id_cla = ?', [classe]);
 
-        if (enseignantCheck.length === 0 || matiereCheck.length === 0 || classeCheck.length === 0) {
-            throw new Error('Une des clés étrangères est invalide');
+        if (enseignantCheck.length === 0) throw new Error('Enseignant invalide');
+        if (matiereCheck.length === 0) throw new Error('Matière invalide');
+        if (classeCheck.length === 0) throw new Error('Classe invalide');
+
+        // Vérifier que tous les paramètres sont définis
+        const params = [
+            new Date().toISOString().split('T')[0],
+            enseignant,
+            matiere,
+            classe,
+            req.session.user.id
+        ];
+        if (params.some(param => param === undefined)) {
+            throw new Error(`Paramètre non défini détecté: ${JSON.stringify(params)}`);
         }
 
+        // Insérer l'évaluation
+        console.log('Insertion dans evaluation avec paramètres:', params);
         const [result] = await connection.execute(
             'INSERT INTO evaluation (date_evaluation, id_ens, id_mat, id_cla, id_usr) VALUES (?, ?, ?, ?, ?)',
-            [new Date().toISOString().split('T')[0], enseignant, matiere, classe, req.session.user.id]
+            params
         );
         const evaluationId = result.insertId;
+        console.log('Évaluation insérée avec id:', evaluationId);
 
+        // Mappage des critères
         const criteriaMap = {
             section1_q1: 'CRT_001', section1_q2: 'CRT_002', section1_q3: 'CRT_003', section1_q4: 'CRT_004',
             section1_q5: 'CRT_005', section1_q6: 'CRT_006', section1_q7: 'CRT_007', section1_q8: 'CRT_008',
@@ -217,15 +273,20 @@ app.post('/evaluation', validateEvaluation, async (req, res) => {
         for (const [key, value] of Object.entries(criteria)) {
             const critereId = criteriaMap[key];
             const note = parseInt(value);
-            if (critereId && !isNaN(note)) {
+            if (critereId && !isNaN(note) && note >= 0 && note <= 20) {
+                console.log(`Insertion note: id_eva=${evaluationId}, id_crt=${critereId}, note=${note}`);
                 await connection.execute(
                     'INSERT INTO noter (id_eva, id_crt, note) VALUES (?, ?, ?)',
                     [evaluationId, critereId, note]
                 );
+            } else {
+                console.log(`Critère ignoré: key=${key}, critereId=${critereId}, note=${note}`);
             }
         }
 
-        if (commentaire && commentaire.trim()) {
+        // Insérer le commentaire s'il est non vide
+        if (commentaire && commentaire.length <= 1000) {
+            console.log('Insertion commentaire:', { texte: commentaire, evaluationId });
             await connection.execute(
                 'INSERT INTO commentaire (texte, date_commentaire, id_eva) VALUES (?, ?, ?)',
                 [commentaire, new Date().toISOString().split('T')[0], evaluationId]
@@ -255,11 +316,15 @@ app.get('/admin-login', (req, res) => {
 
 app.post('/admin-login', async (req, res) => {
     const { password } = req.body;
-    console.log('Mot de passe saisi (Admin):', password); // Débogage
-    const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$10$69XqJYjhQv4P/31YLW84e.hKkMV..5po.QaFwXo7KUN42r4VxxC8O';
+    console.log('Mot de passe saisi (Admin):', password);
+    const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
+    if (!ADMIN_PASSWORD_HASH) {
+        console.error('Erreur: ADMIN_PASSWORD_HASH non défini dans .env');
+        return res.status(500).send('Configuration serveur incorrecte');
+    }
     try {
         const match = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
-        console.log('Correspondance (Admin):', match); // Débogage
+        console.log('Correspondance (Admin):', match);
         if (match) {
             req.session.user = { profil: 'Admin' };
             res.redirect('/dashboard');
@@ -460,12 +525,34 @@ app.post('/api/add-matiere', async (req, res) => {
     }
 });
 
-// Route pour la page Direction
+// Route pour la page Direction (affichage initial du formulaire)
 app.get('/direction', (req, res) => {
-    if (!req.session.user || req.session.user.profil !== 'Direction') {
-        return res.redirect('/login');
-    }
     res.render('direction');
+});
+
+// Nouvelle route pour l'authentification par mot de passe
+app.post('/direction/auth', async (req, res) => {
+    const { password } = req.body;
+    console.log('Tentative d\'authentification Direction avec mot de passe:', password);
+
+    try {
+        // Remplace ceci par le hash du mot de passe que tu veux pour la Direction
+        const directionPasswordHash = '$2b$10$gGbRmWRKOQAyAjdAsiEd.Op8MswT524MiGpr6oWCCENEko352lHru'; // À générer avec bcrypt
+        const match = await bcrypt.compare(password, directionPasswordHash);
+
+        if (match) {
+            // Crée une session temporaire pour la Direction
+            req.session.user = { profil: 'Direction', id: 2 }; // ID fictif, ajuste si besoin
+            console.log('Authentification réussie, session créée:', req.session.user);
+            res.json({ success: true });
+        } else {
+            console.log('Mot de passe incorrect pour Direction');
+            res.json({ success: false });
+        }
+    } catch (err) {
+        console.error('Erreur authentification Direction:', err);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
 });
 
 // Endpoint pour les tendances

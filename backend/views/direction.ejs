@@ -3,186 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Direction - ESI</title>
+    <title>Direction - ESI Évaluation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/html2pdf.bundle.min.js" onload="console.log('html2pdf chargé')" onerror="console.error('Échec du chargement de html2pdf')"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-        .header-left { display: flex; flex-direction: column; gap: 0.5rem; }
-        .datetime { font-size: 1rem; opacity: 0.8; }
-        .nav { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-        .nav-tabs { display: flex; gap: 1rem; }
-        .nav-tab { padding: 0.8rem 1.5rem; background: #f8f9fa; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-        .nav-tab.active, .nav-tab:hover { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .content { padding: 0 2rem; }
-        .data-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-        .table-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; }
-        .table-content { padding: 2rem; }
-        table { width: 100%; border-collapse: collapse; }
-        table th, table td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
-        table th { background: #f8f9fa; font-weight: bold; }
-        .hidden { display: none; }
-        .back-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 25px; cursor: pointer; transition: all 0.3s; }
-        .back-btn:hover { background: rgba(255,255,255,0.3); transform: translateX(-5px); }
+        /* Animation pour le fond dégradé (supprimée, fond blanc) */
+        .gradient-bg {
+            background: rgb(141, 138, 138); /* Fond blanc uni */
+        }
+        /* Effet de verre pour la carte */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        /* Style des onglets */
+        .nav-tab {
+            @apply px-4 py-2 text-black font-semibold cursor-pointer transition-colors; /* Changé en noir */
+        }
+        .nav-tab.active {
+            @apply bg-white bg-opacity-20;
+        }
+        .tab-content {
+            @apply hidden;
+        }
+        .tab-content.active {
+            @apply block;
+        }
+        /* Ajustement pour l'export PDF */
+        @media print {
+            body { background: #FFFFFF !important; }
+            .glass { background: #FFFFFF !important; backdrop-filter: none !important; border: 1px solid #000000 !important; }
+            .text-white { color: #000000 !important; }
+            .border-white { border-color: #000000 !important; }
+            .bg-white { background-color: #333333 !important; }
+            .bg-blue-600 { background-color: #000000 !important; }
+            .bg-red-600 { background-color: #000000 !important; }
+            .bg-green-600 { background-color: #000000 !important; }
+            .hover\:bg-blue-700 { background-color: #000000 !important; }
+            .hover\:bg-red-700 { background-color: #000000 !important; }
+            .hover\:bg-green-700 { background-color: #000000 !important; }
+            .data-table { color: #000000 !important; background-color: #F5F5F5 !important; }
+            .content .hidden { display: block !important; }
+        }
     </style>
 </head>
-<body>
-    <div class="header">
-        <div class="header-left">
-            <h1>📊 Tableau de Direction</h1>
-            <span class="datetime" id="datetime"></span>
-        </div>
-        <button class="back-btn" onclick="window.location.href='/logout'">Déconnexion</button>
-    </div>
-
-    <div class="nav">
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('overview')">Vue d'Ensemble</button>
-            <button class="nav-tab" onclick="showTab('reports')">Rapports</button>
-            <button class="nav-tab" onclick="showTab('trends')">Tendances</button>
-        </div>
-    </div>
-
-    <div class="content">
-        <div id="overviewTab" class="tab-content">
-            <div class="data-table">
-                <div class="table-header">
-                    <h3>📈 Statistiques Globales</h3>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="glass rounded-xl shadow-2xl p-6 w-full max-w-4xl transform hover:scale-105 transition-transform duration-300">
+        <!-- Formulaire de connexion -->
+        <div id="loginForm" class="text-center">
+            <h2 class="text-3xl font-bold text-black mb-4">Accès Direction</h2>
+            <form action="/direction/auth" method="POST" class="space-y-4">
+                <div class="form-group">
+                    <input type="password" id="password" name="password" placeholder="Mot de passe" required
+                           class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="table-content">
-                    <table id="overviewTable">
-                        <thead>
-                            <tr>
-                                <th>Catégorie</th>
-                                <th>Valeur</th>
-                            </tr>
-                        </thead>
-                        <tbody id="overviewBody">
-                            <!-- Rempli dynamiquement -->
-                        </tbody>
-                    </table>
+                <button type="submit" class="w-full bg-blue-600 text-black p-2 rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                    Se connecter
+                </button>
+            </form>
+        </div>
+
+        <!-- Tableau de direction -->
+        <div id="dashboard" class="content hidden">
+            <div class="header flex justify-between items-center mb-6">
+                <div class="header-left">
+                    <h1 class="text-3xl font-bold text-black">📊 Tableau de Direction</h1>
+                    <span class="text-black text-sm block mt-2" id="datetime">Today's date and time is loading...</span>
+                </div>
+                <button class="bg-red-600 text-black px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-300"
+                        onclick="window.location.href='/logout'">Déconnexion</button>
+            </div>
+
+            <div class="nav bg-white bg-opacity-10 rounded-lg p-2 mb-6">
+                <div class="nav-tabs flex justify-around">
+                    <button class="nav-tab active" onclick="showTab('overview')">Vue d'Ensemble</button>
+                    <button class="nav-tab" onclick="showTab('reports')">Rapports</button>
+                    <button class="nav-tab" onclick="showTab('trends')">Tendances</button>
+                </div>
+            </div>
+
+            <div class="content">
+                <div id="overviewTab" class="tab-content active">
+                    <div class="data-table bg-white bg-opacity-10 rounded-lg p-4">
+                        <h3 class="text-xl font-semibold text-black mb-2">📈 Statistiques Globales</h3>
+                        <table class="w-full text-black">
+                            <thead>
+                                <tr class="border-b border-white border-opacity-20">
+                                    <th class="p-2">Catégorie</th>
+                                    <th class="p-2">Valeur</th>
+                                </tr>
+                            </thead>
+                            <tbody id="overviewBody">
+                                <!-- Rempli dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="reportsTab" class="tab-content">
+                    <div class="data-table bg-white bg-opacity-10 rounded-lg p-4 mt-4">
+                        <h3 class="text-xl font-semibold text-black mb-2">📋 Détails des Rapports</h3>
+                        <button id="exportPdf" class="bg-green-600 text-black px-4 py-2 rounded-lg hover:bg-green-700 mb-2 transition-colors duration-300">
+                            Exporter toute la page en PDF
+                        </button>
+                        <table class="w-full text-black">
+                            <thead>
+                                <tr class="border-b border-white border-opacity-20">
+                                    <th class="p-2"><span style="color: #000000;">Matière</span></th>
+                                    <th class="p-2">Enseignant</th>
+                                    <th class="p-2">Score Participation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsBody">
+                                <!-- Rempli dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="trendsTab" class="tab-content">
+                    <div class="data-table bg-white bg-opacity-10 rounded-lg p-4 mt-4">
+                        <h3 class="text-xl font-semibold text-black mb-2">📊 Tendances des Évaluations</h3>
+                        <table class="w-full text-black">
+                            <thead>
+                                <tr class="border-b border-white border-opacity-20">
+                                    <th class="p-2">Mois</th>
+                                    <th class="p-2">Nombre d'Évaluations</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trendsBody">
+                                <!-- Rempli dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="reportsTab" class="tab-content hidden">
-            <div class="data-table">
-                <div class="table-header">
-                    <h3>📋 Détails des Rapports</h3>
-                </div>
-                <div class="table-content">
-                    <table id="reportsTable">
-                        <thead>
-                            <tr>
-                                <th>Matière</th>
-                                <th>Enseignant</th>
-                                <th>Score Participation</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reportsBody">
-                            <!-- Rempli dynamiquement -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <script>
+            function updateDateTime() {
+                const now = new Date();
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const day = days[now.getUTCDay()];
+                const date = now.getUTCDate();
+                const month = now.toLocaleString('default', { month: 'long', timeZone: 'UTC' });
+                const year = now.getUTCFullYear();
+                const hours = now.getUTCHours() % 12 || 12;
+                const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+                const period = now.getUTCHours() >= 12 ? 'PM' : 'AM';
+                document.getElementById('datetime').textContent = `Today's date and time is ${hours}:${minutes} ${period} GMT on ${day}, ${month} ${date}, ${year}.`;
+            }
 
-        <div id="trendsTab" class="tab-content hidden">
-            <div class="data-table">
-                <div class="table-header">
-                    <h3>📊 Tendances des Évaluations</h3>
-                </div>
-                <div class="table-content">
-                    <table id="trendsTable">
-                        <thead>
-                            <tr>
-                                <th>Mois</th>
-                                <th>Nombre d'Évaluations</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trendsBody">
-                            <!-- Rempli dynamiquement -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            function showTab(tabId) {
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.getElementById(tabId + 'Tab').classList.add('active');
+                document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+            }
+
+            async function loadOverview() {
+                try {
+                    const response = await fetch('/api/stats');
+                    const data = await response.json();
+                    console.log('Données stats:', data);
+                    const overviewBody = document.getElementById('overviewBody');
+                    overviewBody.innerHTML = `
+                        <tr class="border-t border-white border-opacity-20">
+                            <td class="p-2">Évaluations Reçues</td><td class="p-2">${data.evaluations || 0}</td>
+                        </tr>
+                        <tr class="border-t border-white border-opacity-20">
+                            <td class="p-2">Enseignants Évalués</td><td class="p-2">${data.teachers || 0}</td>
+                        </tr>
+                        <tr class="border-t border-white border-opacity-20">
+                            <td class="p-2">Matières Couvertes</td><td class="p-2">${data.matieres || 0}</td>
+                        </tr>
+                        <tr class="border-t border-white border-opacity-20">
+                            <td class="p-2">Taux de Satisfaction</td><td class="p-2">${data.satisfaction || '0%'}</td>
+                        </tr>
+                    `;
+                } catch (err) {
+                    console.error('Erreur chargement overview:', err);
+                }
+            }
+
+            async function loadReports() {
+                try {
+                    const response = await fetch('/api/reports');
+                    const data = await response.json();
+                    console.log('Données reports:', data);
+                    const reportsBody = document.getElementById('reportsBody');
+                    reportsBody.innerHTML = data.map(report =>
+                        `<tr class="border-t border-white border-opacity-20">
+                            <td class="p-2">${report.nom_matiere || 'N/A'}</td>
+                            <td class="p-2">${(report.nom || '') + ' ' + (report.prenom || '')}</td>
+                            <td class="p-2">${((report.participation_score / 20 * 100) || 0).toFixed(1)}/20</td>
+                        </tr>`
+                    ).join('');
+                } catch (err) {
+                    console.error('Erreur chargement reports:', err);
+                }
+            }
+
+            async function loadTrends() {
+                try {
+                    const response = await fetch('/api/trends');
+                    const data = await response.json();
+                    console.log('Données trends:', data);
+                    const trendsBody = document.getElementById('trendsBody');
+                    trendsBody.innerHTML = data.map(trend =>
+                        `<tr class="border-t border-white border-opacity-20">
+                            <td class="p-2">${trend.month || 'N/A'}</td>
+                            <td class="p-2">${trend.count || 0}</td>
+                        </tr>`
+                    ).join('');
+                } catch (err) {
+                    console.error('Erreur chargement trends:', err);
+                }
+            }
+
+            async function authenticate(password) {
+                try {
+                    const response = await fetch('/direction/auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        document.getElementById('loginForm').classList.add('hidden');
+                        document.getElementById('dashboard').classList.remove('hidden');
+                        await refreshAll();
+                    } else {
+                        alert('Mot de passe incorrect');
+                    }
+                } catch (err) {
+                    console.error('Erreur d\'authentification:', err);
+                }
+            }
+
+            async function refreshAll() {
+                await Promise.all([loadOverview(), loadReports(), loadTrends()]);
+                updateDateTime();
+            }
+
+            async function exportToPdf() {
+                console.log('Début de l\'export PDF');
+                await refreshAll();
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('active'));
+                const element = document.getElementById('dashboard');
+                const options = {
+                    margin: 10,
+                    filename: 'tableau_direction_complet.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(options).save().then(() => {
+                    console.log('Export terminé');
+                    document.querySelectorAll('.tab-content').forEach(tab => {
+                        if (!tab.classList.contains('active')) tab.classList.remove('active');
+                    });
+                    showTab('overview');
+                }).catch(err => {
+                    console.error('Erreur lors de l\'export:', err);
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                setInterval(updateDateTime, 1000);
+
+                document.querySelector('form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const password = document.getElementById('password').value;
+                    authenticate(password);
+                });
+
+                document.getElementById('exportPdf').addEventListener('click', () => {
+                    console.log('Bouton export cliqué');
+                    exportToPdf();
+                });
+            });
+        </script>
     </div>
-
-    <script>
-        function updateDateTime() {
-            const now = new Date();
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const day = days[now.getUTCDay()];
-            const date = now.getUTCDate();
-            const month = now.toLocaleString('default', { month: 'long', timeZone: 'UTC' });
-            const year = now.getUTCFullYear();
-            const hours = now.getUTCHours() % 12 || 12;
-            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
-            const period = now.getUTCHours() >= 12 ? 'PM' : 'AM';
-            document.getElementById('datetime').textContent = `Today's date and time is ${hours}:${minutes} ${period} GMT on ${day}, ${month} ${date}, ${year}.`;
-        }
-
-        function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-            document.getElementById(tabId + 'Tab').classList.remove('hidden');
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
-        }
-
-        async function loadOverview() {
-            try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                const overviewBody = document.getElementById('overviewBody');
-                overviewBody.innerHTML = `
-                    <tr><td>Évaluations Reçues</td><td>${data.evaluations}</td></tr>
-                    <tr><td>Enseignants Évalués</td><td>${data.teachers}</td></tr>
-                    <tr><td>Matières Couvertes</td><td>${data.matieres}</td></tr>
-                    <tr><td>Taux de Satisfaction</td><td>${data.satisfaction}</td></tr>
-                `;
-            } catch (err) {
-                console.error('Erreur chargement overview:', err);
-            }
-        }
-
-        async function loadReports() {
-            try {
-                const response = await fetch('/api/reports');
-                const data = await response.json();
-                const reportsBody = document.getElementById('reportsBody');
-                reportsBody.innerHTML = data.map(report =>
-                    `<tr><td>${report.nom_matiere}</td><td>${report.nom} ${report.prenom}</td><td>${(report.participation_score / 20 * 100).toFixed(1)}/20</td></tr>`
-                ).join('');
-            } catch (err) {
-                console.error('Erreur chargement reports:', err);
-            }
-        }
-
-        async function loadTrends() {
-            try {
-                // Exemple simple : compter les évaluations par mois (à ajuster avec une vraie requête SQL)
-                const response = await fetch('/api/trends'); // Nouvelle API à créer
-                const data = await response.json();
-                const trendsBody = document.getElementById('trendsBody');
-                trendsBody.innerHTML = data.map(trend =>
-                    `<tr><td>${trend.month}</td><td>${trend.count}</td></tr>`
-                ).join('');
-            } catch (err) {
-                console.error('Erreur chargement trends:', err);
-            }
-        }
-
-        async function refreshAll() {
-            await Promise.all([loadOverview(), loadReports(), loadTrends()]);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-            refreshAll();
-            setInterval(refreshAll, 30000);
-        });
-    </script>
 </body>
 </html>
