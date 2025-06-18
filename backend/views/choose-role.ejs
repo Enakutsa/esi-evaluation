@@ -6,7 +6,6 @@
     <title>Choisir un Rôle - ESI Évaluation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Animation pour le fond dégradé */
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -17,13 +16,11 @@
             background-size: 200% 200%;
             animation: gradientShift 10s ease infinite;
         }
-        /* Effet de verre pour la carte */
         .glass {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        /* Animation pour les boutons */
         .btn-glow {
             transition: all 0.3s ease;
             position: relative;
@@ -42,12 +39,20 @@
         .btn-glow:hover::before {
             left: 100%;
         }
+        #assistantPanel {
+            max-height: 600px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        #assistantPanel.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body class="min-h-screen gradient-animate flex items-center justify-center p-4">
     <div class="max-w-lg w-full glass rounded-2xl shadow-2xl p-8 text-center transform hover:scale-105 transition-transform duration-500">
         <h2 class="text-4xl font-extrabold text-white mb-4 tracking-tight drop-shadow-lg">Choisissez votre rôle</h2>
-        <p class="text-gray-200 mb-6 text-lg"> Sélectionnez votre profil pour continuer.</p>
+        <p class="text-gray-200 mb-6 text-lg">Sélectionnez votre profil pour continuer.</p>
         <div class="space-y-4">
             <a href="/evaluation" class="block bg-blue-600 text-white p-4 rounded-xl btn-glow hover:bg-blue-700 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transform hover:-translate-y-1 transition-all duration-300 text-lg font-semibold">
                 Étudiant
@@ -58,8 +63,106 @@
             <a href="/direction" class="block bg-green-600 text-white p-4 rounded-xl btn-glow hover:bg-green-700 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] transform hover:-translate-y-1 transition-all duration-300 text-lg font-semibold">
                 Direction
             </a>
+            <button id="openAssistant" class="block bg-purple-600 text-white p-4 rounded-xl btn-glow hover:bg-purple-700 hover:shadow-[0_0_20px_rgba(147,51,234,0.5)] transform hover:-translate-y-1 transition-all duration-300 text-lg font-semibold w-full">
+                Assistance IA
+            </button>
         </div>
         <a href="/logout" class="mt-6 block text-gray-300 hover:text-white hover:underline transition-colors duration-300">Se déconnecter</a>
+
+        <div id="assistantPanel" class="hidden">
+            <%- include('assistant') %>
+        </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openAssistantBtn = document.getElementById('openAssistant');
+            const assistantPanel = document.getElementById('assistantPanel');
+            const chatMessages = assistantPanel.querySelector('#chatMessages');
+            const messageInput = assistantPanel.querySelector('#messageInput');
+            const sendBtn = assistantPanel.querySelector('#sendBtn');
+            const typingIndicator = assistantPanel.querySelector('#typingIndicator');
+
+            if (openAssistantBtn && assistantPanel) {
+                openAssistantBtn.addEventListener('click', () => {
+                    assistantPanel.classList.toggle('hidden');
+                    if (!assistantPanel.classList.contains('hidden') && chatMessages) {
+                        chatMessages.innerHTML = `<div class="welcome-message text-center text-gray-600 my-5">
+                            👋 Bonjour, ${user.email} ! Je suis votre assistant IA pour ESI Évaluation.<br>Comment puis-je vous aider aujourd’hui ?
+                        </div>`;
+                        messageInput.focus();
+                    }
+                });
+            } else {
+                console.error('Éléments non trouvés : openAssistantBtn ou assistantPanel');
+            }
+
+            async function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                sendBtn.disabled = true;
+                messageInput.disabled = true;
+
+                addMessage(message, true);
+                messageInput.value = '';
+
+                showTyping();
+                const response = await getAIResponse(message);
+                hideTyping();
+                addMessage(response);
+
+                sendBtn.disabled = false;
+                messageInput.disabled = false;
+                messageInput.focus();
+            }
+
+            function addMessage(content, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">${isUser ? 'U' : 'AI'}</div>
+                    <div class="message-content max-w-lg p-4 rounded-2xl ${isUser ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-gradient-to-r from-blue-100 to-indigo-100 text-indigo-800'} animate-[slideIn_0.3s_ease-out]">${content}</div>
+                `;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function showTyping() {
+                typingIndicator.style.display = 'flex';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function hideTyping() {
+                typingIndicator.style.display = 'none';
+            }
+
+            async function getAIResponse(userMessage) {
+                try {
+                    const response = await fetch('/api/assistant', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: userMessage })
+                    });
+                    const result = await response.json();
+                    return result.response || "Désolé, je n’ai pas compris. Essayez de reformuler ou tapez 'aide' !";
+                } catch (err) {
+                    return "Erreur de connexion au serveur. Veuillez réessayer.";
+                }
+            }
+
+            if (sendBtn && messageInput) {
+                sendBtn.addEventListener('click', sendMessage);
+                messageInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        sendMessage();
+                    }
+                });
+            } else {
+                console.error('Éléments non trouvés : sendBtn ou messageInput');
+            }
+        });
+    </script>
 </body>
 </html>

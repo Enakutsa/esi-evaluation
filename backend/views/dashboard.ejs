@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord - ESI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,153 +13,251 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e1e2f 0%, #2d2d44 100%);
             min-height: 100vh;
+            color: #e0e0e0;
+            overflow-x: hidden;
         }
 
         .dashboard-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 2rem;
+            background: linear-gradient(90deg, #4a90e2, #7a4ae2);
+            padding: 1.5rem 2.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .header-left {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+        .header-left h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
         }
 
         .datetime {
-            font-size: 1rem;
-            opacity: 0.8;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            font-weight: 300;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
         }
 
         .dashboard-nav {
-            background: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+            padding: 1rem 2.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .nav-tabs {
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
+            justify-content: center;
         }
 
         .nav-tab {
-            padding: 0.8rem 1.5rem;
-            background: #f8f9fa;
+            padding: 0.8rem 1.8rem;
+            background: rgba(255, 255, 255, 0.1);
             border: none;
-            border-radius: 8px;
+            border-radius: 20px;
             cursor: pointer;
-            transition: all 0.3s;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #d0d0d0;
         }
 
         .nav-tab.active,
         .nav-tab:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(90deg, #4a90e2, #7a4ae2);
+            color: #fff;
+            transform: translateY(-2px);
         }
 
         .dashboard-content {
-            padding: 0 2rem;
+            padding: 2rem 2.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
         .stat-card {
-            background: white;
-            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             text-align: center;
-            transition: transform 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
         }
 
         .stat-card:hover {
+            background: rgba(255, 255, 255, 0.1);
             transform: translateY(-5px);
         }
 
         .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4a90e2;
             margin-bottom: 0.5rem;
         }
 
         .stat-label {
-            color: #666;
-            font-size: 1rem;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            font-weight: 300;
         }
 
         .data-table {
-            background: white;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .table-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 2rem;
+            background: linear-gradient(90deg, #4a90e2, #7a4ae2);
+            padding: 1rem 1.5rem;
+            font-weight: 500;
         }
 
         .table-content {
-            padding: 2rem;
+            padding: 1.5rem;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
         table th,
         table td {
             padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         table th {
-            background: #f8f9fa;
-            font-weight: bold;
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 500;
         }
 
-        .hidden {
+        .add-form {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+            color: #d0d0d0;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            color: #e0e0e0;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: #4a90e2;
+            outline: none;
+        }
+
+        .add-form button {
+            background: linear-gradient(90deg, #4a90e2, #7a4ae2);
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 48%;
+            margin-right: 4%;
+        }
+
+        .add-form .delete-btn {
+            background: linear-gradient(90deg, #e24a4a, #e27a4a);
+            width: 48%;
+        }
+
+        .add-form button:hover {
+            transform: translateY(-2px);
+        }
+
+        .add-form .delete-btn:hover {
+            background: linear-gradient(90deg, #c23a3a, #c26a3a);
+        }
+
+        .message {
+            margin-top: 0.5rem;
+            color: #28a745;
+            font-weight: 300;
             display: none;
         }
 
-        .back-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateX(-5px);
+        .error-message {
+            color: #ff4d4d;
         }
     </style>
 </head>
 <body>
     <div class="dashboard-header">
         <div class="header-left">
-            <h1>🎯 Tableau de Bord Administrateur</h1>
-            <span class="datetime" id="datetime">Today's date and time is 12:02 PM GMT on Monday, May 26, 2025.</span>
+            <h1>🎯 Tableau de Bord Admin</h1>
+            <span class="datetime" id="datetime">Today's date and time is 12:10 AM GMT on Tuesday, June 17, 2025.</span>
         </div>
         <button class="back-btn" onclick="window.location.href='/logout'">Déconnexion</button>
     </div>
@@ -169,11 +268,12 @@
             <button class="nav-tab" onclick="showTab('rankings')">🏆 Classements</button>
             <button class="nav-tab" onclick="showTab('reports')">📋 Rapports</button>
             <button class="nav-tab" onclick="showTab('teachers')">👨‍🏫 Enseignants</button>
+            <button class="nav-tab" onclick="showTab('add')">➕ Ajouter/Supprimer</button>
         </div>
     </div>
 
     <div class="dashboard-content">
-        <div id="statsTab" class="tab-content">
+        <div id="statsTab" class="tab-content active">
             <div class="stats-grid" id="statsGrid">
                 <!-- Les stats seront remplies dynamiquement -->
             </div>
@@ -198,7 +298,7 @@
             </div>
         </div>
 
-        <div id="rankingsTab" class="tab-content hidden">
+        <div id="rankingsTab" class="tab-content">
             <div class="data-table">
                 <div class="table-header">
                     <h3>🏆 Classement des Enseignants</h3>
@@ -220,10 +320,10 @@
             </div>
         </div>
 
-        <div id="reportsTab" class="tab-content hidden">
+        <div id="reportsTab" class="tab-content">
             <div class="data-table">
                 <div class="table-header">
-                    <h3>📊 Enseignements Bien Animés</h3>
+                    <h3>📊 Top Enseignants par Participation</h3>
                 </div>
                 <div class="table-content">
                     <table id="reportsTable">
@@ -232,6 +332,7 @@
                                 <th>Matière</th>
                                 <th>Enseignant</th>
                                 <th>Score Participation</th>
+                                <th>Critères Influents</th>
                             </tr>
                         </thead>
                         <tbody id="reportsBody">
@@ -242,7 +343,7 @@
             </div>
         </div>
 
-        <div id="teachersTab" class="tab-content hidden">
+        <div id="teachersTab" class="tab-content">
             <div class="data-table">
                 <div class="table-header">
                     <h3>👨‍🏫 Liste des Enseignants</h3>
@@ -254,6 +355,7 @@
                                 <th>Enseignant</th>
                                 <th>Matières Enseignées</th>
                                 <th>Score Moyen</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="teachersBody">
@@ -263,8 +365,54 @@
                 </div>
             </div>
         </div>
-    </div>
 
+        <div id="addTab" class="tab-content">
+            <div class="add-form">
+                <h3 class="text-xl font-semibold mb-4">Ajouter/Supprimer un Enseignant</h3>
+                <form id="addTeacherForm" class="space-y-4">
+                    <div class="form-group">
+                        <label for="teacherNom">Nom</label>
+                        <input type="text" id="teacherNom" name="nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="teacherPrenom">Prénom</label>
+                        <input type="text" id="teacherPrenom" name="prenom" required>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="add-btn">Ajouter Enseignant</button>
+                        <button type="button" class="delete-btn" onclick="deleteTeacher()">Supprimer Enseignant</button>
+                    </div>
+                </form>
+                <p id="teacherMessage" class="message"></p>
+
+                <h3 class="text-xl font-semibold mt-6 mb-4">Ajouter/Supprimer une Matière</h3>
+                <form id="addMatiereForm" class="space-y-4">
+                    <div class="form-group">
+                        <label for="matiereNom">Nom de la matière</label>
+                        <input type="text" id="matiereNom" name="nom_matiere" required>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="add-btn">Ajouter Matière</button>
+                        <button type="button" class="delete-btn" onclick="deleteMatiere()">Supprimer Matière</button>
+                    </div>
+                </form>
+                <p id="matiereMessage" class="message"></p>
+
+                <h3 class="text-xl font-semibold mt-6 mb-4">Ajouter/Supprimer une Classe</h3>
+                <form id="addClasseForm" class="space-y-4">
+                    <div class="form-group">
+                        <label for="classeNom">Nom de la classe</label>
+                        <input type="text" id="classeNom" name="nom_classe" required>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="add-btn">Ajouter Classe</button>
+                        <button type="button" class="delete-btn" onclick="deleteClasse()">Supprimer Classe</button>
+                    </div>
+                </form>
+                <p id="classeMessage" class="message"></p>
+            </div>
+        </div>
+    </div>
     <script>
         // Fonction pour formater et mettre à jour la date et l'heure
         function updateDateTime() {
@@ -281,15 +429,14 @@
             const formattedDateTime = `Today's date and time is ${hours}:${minutes} ${period} GMT on ${day}, ${month} ${date}, ${year}.`;
             document.getElementById('datetime').textContent = formattedDateTime;
         }
-
+    
         function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-            document.getElementById(tabId + 'Tab').classList.remove('hidden');
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId + 'Tab').classList.add('active');
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
             document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
         }
-
-        // Fonction pour charger les stats
+    
         async function loadStats() {
             try {
                 const response = await fetch('/api/stats');
@@ -298,26 +445,25 @@
                 statsGrid.innerHTML = `
                     <div class="stat-card">
                         <div class="stat-number">${data.evaluations}</div>
-                        <div class="stat-label">Évaluations Reçues</div>
+                        <div class="stat-label">Évaluations</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number">${data.teachers}</div>
-                        <div class="stat-label">Enseignants Évalués</div>
+                        <div class="stat-label">Enseignants</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number">${data.matieres}</div>
-                        <div class="stat-label">Matières Couvertes</div>
+                        <div class="stat-label">Matières</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number">${data.satisfaction}</div>
-                        <div class="stat-label">Taux de Satisfaction</div Led>
+                        <div class="stat-label">Satisfaction</div>
                     </div>
                 `;
             } catch (err) {
                 console.error('Erreur chargement stats:', err);
             }
         }
-
         // Fonction pour charger les scores moyens par critère
         async function loadScores() {
             try {
@@ -331,7 +477,7 @@
                 console.error('Erreur chargement scores:', err);
             }
         }
-
+    
         // Fonction pour charger le classement
         async function loadRankings() {
             try {
@@ -339,41 +485,175 @@
                 const data = await response.json();
                 const rankingsBody = document.getElementById('rankingsBody');
                 rankingsBody.innerHTML = data.map((teacher, index) =>
-                    `<tr><td><strong>🥇 ${index + 1}</strong></td><td><strong>${teacher.nom} ${teacher.prenom}</strong></td><td><strong>${(teacher.score_moyen / 20 * 100).toFixed(1)}/20</strong></td></tr>`
-                ).slice(0, 5).join('');
+                    `<tr><td><strong>${index + 1}</strong></td><td><strong>${teacher.nom} ${teacher.prenom}</strong></td><td><strong>${(teacher.score_moyen / 20 * 100).toFixed(1)}%</strong></td></tr>`
+                ).join('');
             } catch (err) {
                 console.error('Erreur chargement rankings:', err);
             }
         }
-
+    
         // Fonction pour charger les rapports
         async function loadReports() {
             try {
                 const response = await fetch('/api/reports');
                 const data = await response.json();
                 const reportsBody = document.getElementById('reportsBody');
-                reportsBody.innerHTML = data.map(report =>
-                    `<tr><td>${report.nom_matiere}</td><td>${report.nom} ${report.prenom}</td><td><strong>${(report.participation_score / 20 * 100).toFixed(1)}/20</strong></td></tr>`
+                reportsBody.innerHTML = data.map((report, index) =>
+                    `<tr><td>${report.nom_matiere}</td><td><strong>${report.nom} ${report.prenom}</strong></td><td><strong>${report.participation_score}</strong></td><td>${report.influential_criteria}</td></tr>`
                 ).join('');
             } catch (err) {
                 console.error('Erreur chargement reports:', err);
             }
         }
-
-        // Fonction pour charger la liste des enseignants
+    
+        // Fonction pour charger la liste des enseignants avec lien d'évaluation
         async function loadTeachers() {
             try {
                 const response = await fetch('/api/teachers');
                 const data = await response.json();
                 const teachersBody = document.getElementById('teachersBody');
                 teachersBody.innerHTML = data.map(teacher =>
-                    `<tr><td><strong>${teacher.nom} ${teacher.prenom}</strong></td><td>${teacher.matieres}</td><td><strong>${(teacher.score_moyen / 20 * 100).toFixed(1)}/20</strong></td></tr>`
+                    `<tr>
+                        <td><strong>${teacher.nom} ${teacher.prenom}</strong></td>
+                        <td>${teacher.matieres}</td>
+                        <td><strong>${(teacher.score_moyen / 20 * 100).toFixed(1)}%</strong></td>
+                        <td><a href="/evaluation?enseignant=${teacher.id_ens}" class="text-blue-400 underline">Évaluer</a></td>
+                    </tr>`
                 ).join('');
             } catch (err) {
                 console.error('Erreur chargement teachers:', err);
             }
         }
-
+    
+        // Gérer l'ajout d'un enseignant
+        document.getElementById('addTeacherForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nom = document.getElementById('teacherNom').value;
+            const prenom = document.getElementById('teacherPrenom').value;
+            const response = await fetch('/api/add-teacher', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom, prenom })
+            });
+            const result = await response.json();
+            const message = document.getElementById('teacherMessage');
+            message.textContent = result.message;
+            message.className = `message ${result.success ? '' : 'error-message'}`;
+            message.style.display = result.success ? 'block' : 'none';
+            if (result.success) {
+                setTimeout(() => message.style.display = 'none', 3000);
+                document.getElementById('teacherNom').value = '';
+                document.getElementById('teacherPrenom').value = '';
+                refreshAll();
+            }
+        });
+    
+        // Gérer la suppression d'un enseignant
+        async function deleteTeacher() {
+            const nom = prompt('Entrez le nom de l\'enseignant à supprimer :');
+            const prenom = prompt('Entrez le prénom de l\'enseignant à supprimer :');
+            if (nom && prenom) {
+                const response = await fetch('/api/add-teacher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nom, prenom, action: 'delete' })
+                });
+                const result = await response.json();
+                const message = document.getElementById('teacherMessage');
+                message.textContent = result.message;
+                message.className = `message ${result.success ? '' : 'error-message'}`;
+                message.style.display = result.success ? 'block' : 'none';
+                if (result.success) {
+                    setTimeout(() => message.style.display = 'none', 3000);
+                    refreshAll();
+                }
+            }
+        }
+    
+        // Gérer l'ajout d'une matière
+        document.getElementById('addMatiereForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nom_matiere = document.getElementById('matiereNom').value;
+            const response = await fetch('/api/add-matiere', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom_matiere })
+            });
+            const result = await response.json();
+            const message = document.getElementById('matiereMessage');
+            message.textContent = result.message;
+            message.className = `message ${result.success ? '' : 'error-message'}`;
+            message.style.display = result.success ? 'block' : 'none';
+            if (result.success) {
+                setTimeout(() => message.style.display = 'none', 3000);
+                document.getElementById('matiereNom').value = '';
+                refreshAll();
+            }
+        });
+    
+        // Gérer la suppression d'une matière
+        async function deleteMatiere() {
+            const nom_matiere = prompt('Entrez le nom de la matière à supprimer :');
+            if (nom_matiere) {
+                const response = await fetch('/api/add-matiere', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nom_matiere, action: 'delete' })
+                });
+                const result = await response.json();
+                const message = document.getElementById('matiereMessage');
+                message.textContent = result.message;
+                message.className = `message ${result.success ? '' : 'error-message'}`;
+                message.style.display = result.success ? 'block' : 'none';
+                if (result.success) {
+                    setTimeout(() => message.style.display = 'none', 3000);
+                    refreshAll();
+                }
+            }
+        }
+    
+        // Gérer l'ajout d'une classe
+        document.getElementById('addClasseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nom_classe = document.getElementById('classeNom').value;
+            const response = await fetch('/api/add-classe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom_classe })
+            });
+            const result = await response.json();
+            const message = document.getElementById('classeMessage');
+            message.textContent = result.message;
+            message.className = `message ${result.success ? '' : 'error-message'}`;
+            message.style.display = result.success ? 'block' : 'none';
+            if (result.success) {
+                setTimeout(() => message.style.display = 'none', 3000);
+                document.getElementById('classeNom').value = '';
+                refreshAll();
+            }
+        });
+    
+        // Gérer la suppression d'une classe
+        async function deleteClasse() {
+            const nom_classe = prompt('Entrez le nom de la classe à supprimer :');
+            if (nom_classe) {
+                const response = await fetch('/api/add-classe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nom_classe, action: 'delete' })
+                });
+                const result = await response.json();
+                const message = document.getElementById('classeMessage');
+                message.textContent = result.message;
+                message.className = `message ${result.success ? '' : 'error-message'}`;
+                message.style.display = result.success ? 'block' : 'none';
+                if (result.success) {
+                    setTimeout(() => message.style.display = 'none', 3000);
+                    refreshAll();
+                }
+            }
+        }
+    
         // Fonction pour tout recharger
         async function refreshAll() {
             await Promise.all([
@@ -384,13 +664,13 @@
                 loadTeachers()
             ]);
         }
-
+    
         // Charger toutes les données au démarrage, rafraîchir toutes les 30 secondes, et mettre à jour l'heure toutes les secondes
         document.addEventListener('DOMContentLoaded', () => {
-            updateDateTime(); // Charger la date et l'heure initiales
-            setInterval(updateDateTime, 1000); // Mettre à jour l'heure toutes les secondes
-            refreshAll(); // Chargement initial des données
-            setInterval(refreshAll, 30000); // Rafraîchir les données toutes les 30 secondes
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            refreshAll();
+            setInterval(refreshAll, 30000);
         });
     </script>
 </body>

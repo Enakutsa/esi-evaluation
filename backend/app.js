@@ -36,12 +36,15 @@ const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'esi_evaluation'
+    database: process.env.DB_NAME || 'esi_evaluation',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
 db.getConnection()
     .then(() => console.log('Connecté à MySQL'))
-    .catch(err => console.error('Erreur DB:', err));
+    .catch(err => console.error('Erreur DB (connexion):', err));
 
 // Swagger configuration
 const swaggerOptions = {
@@ -367,6 +370,14 @@ app.get('/add-data', (req, res) => {
 // Endpoint pour les statistiques
 app.get('/api/stats', async (req, res) => {
     try {
+        // Vérification explicite de la table classe
+        const [tables] = await req.db.execute("SHOW TABLES LIKE 'classe'");
+        console.log('Table classe existe ?', tables.length > 0);
+
+        // Test de la requête avec une sélection explicite
+        const [classCheck] = await req.db.execute('SELECT * FROM classe LIMIT 1');
+        console.log('Données classe (test):', classCheck.length > 0 ? classCheck[0] : 'Aucune donnée');
+
         const [evalCount] = await req.db.execute('SELECT COUNT(*) as count FROM evaluation');
         const [teacherCount] = await req.db.execute('SELECT COUNT(DISTINCT ev.id_ens) as count FROM evaluation ev');
         const [matiereCount] = await req.db.execute('SELECT COUNT(*) as count FROM matiere');
@@ -374,16 +385,26 @@ app.get('/api/stats', async (req, res) => {
             SELECT AVG(n.note) as avg_score FROM evaluation e
             JOIN noter n ON e.id_eva = n.id_eva
         `);
+        const [classCount] = await req.db.execute('SELECT COUNT(*) as count FROM classe'); // Comptage des classes
         const avg = avgScore[0].avg_score || 0;
+
+        // Débogage détaillé
+        console.log('Comptage évaluations:', evalCount[0].count);
+        console.log('Comptage enseignants:', teacherCount[0].count);
+        console.log('Comptage matières:', matiereCount[0].count);
+        console.log('Comptage classes (raw):', classCount);
+        console.log('Comptage classes:', classCount[0] ? classCount[0].count : 'Aucun résultat');
+
         res.json({
             evaluations: evalCount[0].count,
             teachers: teacherCount[0].count,
             matieres: matiereCount[0].count,
-            satisfaction: (avg / 20 * 100).toFixed(0) + '%'
+            satisfaction: (avg / 20 * 100).toFixed(0) + '%',
+            classes: classCount[0] ? classCount[0].count : 0 // Utiliser 0 si aucun résultat
         });
     } catch (err) {
         console.error('Erreur /api/stats:', err);
-        res.status(500).json({ error: 'Erreur serveur' });
+        res.status(500).json({ error: 'Erreur serveur', details: err.message });
     }
 });
 
@@ -444,21 +465,47 @@ app.get('/api/reports', async (req, res) => {
     try {
         const [totalEvals] = await req.db.execute('SELECT COUNT(*) as count FROM evaluation');
         const total = totalEvals[0].count || 1;
+
+        // Calcul de la moyenne globale pour normaliser
+        const [globalAvg] = await req.db.execute(`
+            SELECT AVG(n.note) as global_avg FROM noter n
+        `);
+        const globalAverage = globalAvg[0].global_avg || 10;
+
+        // Mappage des grands titres aux plages de critères
+        const criteriaSections = {
+            'I. Intérêt de l’enseignant pour son cours': 'CRT_001-CRT_008',
+            'II. Clarté du cours': 'CRT_009-CRT_012',
+            'III. Relations avec les apprenants': 'CRT_013-CRT_020',
+            'IV. Organisation du cours': 'CRT_021-CRT_026',
+            'V. Incitation à la participation': 'CRT_027-CRT_033',
+            'VI. Explications': 'CRT_034-CRT_040',
+            'VII. Attitude des apprenants (auto-perception)': 'CRT_041-CRT_044'
+        };
+
+        // Récupérer les top 5 enseignants avec score de participation
         const [rows] = await req.db.execute(`
-            SELECT m.nom_matiere, e.nom, e.prenom,
-                   AVG(CASE WHEN n.id_crt LIKE 'CRT_0[2-3][7-8]' THEN n.note ELSE NULL END) AS participation_score,
-                   (COUNT(DISTINCT ev.id_eva) / ? * 100) AS interaction_rate,
-                   c.nom_classe
+            SELECT 
+                e.id_ens, e.nom, e.prenom, m.nom_matiere, c.nom_classe,
+                AVG(CASE WHEN n.id_crt BETWEEN 'CRT_027' AND 'CRT_033' THEN n.note ELSE NULL END) AS participation_score
             FROM enseignant e
             JOIN evaluation ev ON e.id_ens = ev.id_ens
             JOIN matiere m ON ev.id_mat = m.id_mat
             JOIN classe c ON ev.id_cla = c.id_cla
             JOIN noter n ON ev.id_eva = n.id_eva
-            GROUP BY e.id_ens, m.id_mat, c.id_cla
+            GROUP BY e.id_ens, e.nom, e.prenom, m.id_mat, c.id_cla
             ORDER BY participation_score DESC
-            LIMIT 3
-        `, [total]);
-        res.json(rows);
+            LIMIT 5
+        `, [globalAverage]);
+
+        // Formater la réponse avec les grands titres
+        const formattedRows = rows.map(row => ({
+            ...row,
+            participation_score: row.participation_score ? (row.participation_score / 20 * 100).toFixed(1) + '%' : '0%',
+            influential_criteria: Object.keys(criteriaSections).join(', ') // Liste des grands titres
+        }));
+
+        res.json(formattedRows);
     } catch (err) {
         console.error('Erreur /api/reports:', err);
         res.status(500).json({ error: 'Erreur serveur' });
@@ -491,41 +538,95 @@ app.get('/api/teachers', async (req, res) => {
 
 // Route pour ajouter un enseignant
 app.post('/api/add-teacher', async (req, res) => {
-    const { nom, prenom } = req.body;
+    const { nom, prenom, action } = req.body;
     if (!nom || !prenom) {
         return res.status(400).json({ success: false, message: 'Nom et prénom sont requis' });
     }
     try {
-        const [result] = await req.db.execute(
-            'INSERT INTO enseignant (id_ens, nom, prenom) VALUES (?, ?, ?)',
-            [`ENS_${Date.now()}`, nom, prenom]
-        );
-        res.json({ success: true, message: 'Enseignant ajouté !' });
+        if (action === 'delete') {
+            const [result] = await req.db.execute(
+                'DELETE FROM enseignant WHERE nom = ? AND prenom = ?',
+                [nom, prenom]
+            );
+            if (result.affectedRows > 0) {
+                res.json({ success: true, message: 'Enseignant supprimé !' });
+            } else {
+                res.json({ success: false, message: 'Enseignant non trouvé' });
+            }
+        } else {
+            const [result] = await req.db.execute(
+                'INSERT INTO enseignant (id_ens, nom, prenom) VALUES (?, ?, ?)',
+                [`ENS_${Date.now()}`, nom, prenom]
+            );
+            res.json({ success: true, message: 'Enseignant ajouté !', id_ens: `ENS_${Date.now()}` });
+        }
     } catch (err) {
-        console.error('Erreur ajout enseignant:', err);
+        console.error('Erreur ajout/suppression enseignant:', err);
         res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
 });
 
 // Route pour ajouter une matière
 app.post('/api/add-matiere', async (req, res) => {
-    const { nom_matiere } = req.body;
+    const { nom_matiere, action } = req.body;
     if (!nom_matiere) {
         return res.status(400).json({ success: false, message: 'Nom de la matière requis' });
     }
     try {
-        const [result] = await req.db.execute(
-            'INSERT INTO matiere (id_mat, nom_matiere) VALUES (?, ?)',
-            [`MAT_${Date.now()}`, nom_matiere]
-        );
-        res.json({ success: true, message: 'Matière ajoutée !' });
+        if (action === 'delete') {
+            const [result] = await req.db.execute(
+                'DELETE FROM matiere WHERE nom_matiere = ?',
+                [nom_matiere]
+            );
+            if (result.affectedRows > 0) {
+                res.json({ success: true, message: 'Matière supprimée !' });
+            } else {
+                res.json({ success: false, message: 'Matière non trouvée' });
+            }
+        } else {
+            const [result] = await req.db.execute(
+                'INSERT INTO matiere (id_mat, nom_matiere) VALUES (?, ?)',
+                [`MAT_${Date.now()}`, nom_matiere]
+            );
+            res.json({ success: true, message: 'Matière ajoutée !', id_mat: `MAT_${Date.now()}` });
+        }
     } catch (err) {
-        console.error('Erreur ajout matière:', err);
+        console.error('Erreur ajout/suppression matière:', err);
         res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
 });
 
-// Route pour la page Direction (affichage initial du formulaire)
+// Route pour ajouter une classe
+app.post('/api/add-classe', async (req, res) => {
+    const { nom_classe, action } = req.body;
+    if (!nom_classe) {
+        return res.status(400).json({ success: false, message: 'Nom de la classe requis' });
+    }
+    try {
+        if (action === 'delete') {
+            const [result] = await req.db.execute(
+                'DELETE FROM classe WHERE nom_classe = ?',
+                [nom_classe]
+            );
+            if (result.affectedRows > 0) {
+                res.json({ success: true, message: 'Classe supprimée !' });
+            } else {
+                res.json({ success: false, message: 'Classe non trouvée' });
+            }
+        } else {
+            const [result] = await req.db.execute(
+                'INSERT INTO classe (id_cla, nom_classe) VALUES (?, ?)',
+                [`CLA_${Date.now()}`, nom_classe]
+            );
+            res.json({ success: true, message: 'Classe ajoutée !', id_cla: `CLA_${Date.now()}` });
+        }
+    } catch (err) {
+        console.error('Erreur ajout/suppression classe:', err);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+});
+
+// Route pour la page Direction
 app.get('/direction', (req, res) => {
     res.render('direction');
 });
@@ -536,13 +637,11 @@ app.post('/direction/auth', async (req, res) => {
     console.log('Tentative d\'authentification Direction avec mot de passe:', password);
 
     try {
-        // Remplace ceci par le hash du mot de passe que tu veux pour la Direction
-        const directionPasswordHash = '$2b$10$gGbRmWRKOQAyAjdAsiEd.Op8MswT524MiGpr6oWCCENEko352lHru'; // À générer avec bcrypt
+        const directionPasswordHash = '$2b$10$gGbRmWRKOQAyAjdAsiEd.Op8MswT524MiGpr6oWCCENEko352lHru';
         const match = await bcrypt.compare(password, directionPasswordHash);
 
         if (match) {
-            // Crée une session temporaire pour la Direction
-            req.session.user = { profil: 'Direction', id: 2 }; // ID fictif, ajuste si besoin
+            req.session.user = { profil: 'Direction', id: 2 };
             console.log('Authentification réussie, session créée:', req.session.user);
             res.json({ success: true });
         } else {
@@ -569,6 +668,47 @@ app.get('/api/trends', async (req, res) => {
     } catch (err) {
         console.error('Erreur /api/trends:', err);
         res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Route pour l'assistant IA
+app.post('/api/assistant', isAuthenticated, async (req, res) => {
+    const { message } = req.body;
+    console.log('Requête assistant reçue:', message, 'pour utilisateur:', req.session.user.email);
+
+    if (!message) {
+        return res.status(400).json({ success: false, response: 'Aucune question fournie.' });
+    }
+
+    try {
+        const knowledgeBase = {
+            'créer évaluation': 'Pour créer une évaluation :\n1. 📝 Accédez à /evaluation\n2. 🎯 Sélectionnez un enseignant, une matière et une classe\n3. 📚 Remplissez les critères\n4. ⏰ Soumettez le formulaire',
+            'résultats': `Pour voir vos résultats :\n📊 Direction : /direction\n📈 Admin : /dashboard\n🎯 Étudiants : Pas d’accès direct\n(Profil actuel : ${req.session.user.profil})`,
+            'profil': 'Gestion de profil :\n👤 Inscription : /register (non modifiable)\n🔐 Mot de passe : Contactez l’admin\n📱 Rôle : Déterminé lors de l’inscription',
+            'aide': 'Je peux vous aider avec :\n• 📝 Création d’évaluations\n• 📊 Consultation des résultats\n• 👤 Gestion du profil\n• 🧭 Navigation\nPosez-moi une question spécifique !',
+            'navigation': 'Guide de navigation :\n🏠 Accueil : /\n📝 Évaluations : /evaluation\n📊 Rapports : /direction\n👥 Admin : /dashboard\n⚙️ Connexion : /login'
+        };
+
+        const lowerMessage = message.toLowerCase();
+        let response = 'Désolé, je n’ai pas compris. Essayez "aide" pour voir mes options !';
+
+        for (const [key, value] of Object.entries(knowledgeBase)) {
+            if (lowerMessage.includes(key.toLowerCase())) {
+                response = value;
+                break;
+            }
+        }
+
+        if (lowerMessage.includes('bonjour') || lowerMessage.includes('salut')) {
+            response = `Bonjour ${req.session.user.email} ! 👋 Comment puis-je vous aider aujourd’hui ?`;
+        } else if (lowerMessage.includes('merci')) {
+            response = 'De rien ! 😊 N’hésitez pas si vous avez d’autres questions.';
+        }
+
+        res.json({ success: true, response });
+    } catch (err) {
+        console.error('Erreur dans /api/assistant:', err);
+        res.status(500).json({ success: false, response: 'Erreur serveur. Veuillez réessayer.' });
     }
 });
 

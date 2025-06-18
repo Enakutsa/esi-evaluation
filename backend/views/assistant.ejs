@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant IA - ESI Évaluation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-animate {
+            background: linear-gradient(45deg, #93c5fd, #a5b4fc, #f9a8d4);
+            background-size: 200% 200%;
+            animation: gradientShift 10s ease infinite;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+        .btn-glow {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+        .btn-glow:hover::before {
+            left: 100%;
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-animate flex items-center justify-center p-4">
+    <div class="chat-container max-w-3xl w-full h-[600px] glass rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="chat-header bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 text-center relative">
+            <div class="ai-status absolute top-5 right-5 flex items-center gap-2">
+                <div class="status-dot w-3 h-3 bg-green-500 rounded-full animate-[pulse_2s_infinite]"></div>
+                <span class="text-sm">En ligne</span>
+            </div>
+            <h1 class="text-2xl font-bold mb-1">🤖 Assistant ESI</h1>
+            <p class="text-sm opacity-90">Votre guide intelligent pour ESI Évaluation, <%= user.email %></p>
+        </div>
+
+        <div class="chat-messages flex-1 p-5 overflow-y-auto bg-gray-100" id="chatMessages">
+            <div class="welcome-message text-center text-gray-600 my-5">
+                <p>👋 Bonjour, <%= user.email %> ! Je suis votre assistant IA pour ESI Évaluation.<br>Comment puis-je vous aider aujourd’hui ?</p>
+            </div>
+            
+            <div class="quick-actions flex flex-wrap gap-2 mb-4">
+                <div class="quick-btn px-4 py-2 bg-blue-100 text-blue-600 border border-blue-200 rounded-full cursor-pointer text-sm hover:bg-blue-200 hover:-translate-y-1 transition-all duration-300" onclick="sendQuickMessage('Comment créer une évaluation ?')">
+                    📝 Créer une évaluation
+                </div>
+                <div class="quick-btn px-4 py-2 bg-blue-100 text-blue-600 border border-blue-200 rounded-full cursor-pointer text-sm hover:bg-blue-200 hover:-translate-y-1 transition-all duration-300" onclick="sendQuickMessage('Comment consulter mes résultats ?')">
+                    📊 Voir résultats
+                </div>
+                <div class="quick-btn px-4 py-2 bg-blue-100 text-blue-600 border border-blue-200 rounded-full cursor-pointer text-sm hover:bg-blue-200 hover:-translate-y-1 transition-all duration-300" onclick="sendQuickMessage('Comment gérer mon profil ?')">
+                    👤 Gérer profil
+                </div>
+                <div class="quick-btn px-4 py-2 bg-blue-100 text-blue-600 border border-blue-200 rounded-full cursor-pointer text-sm hover:bg-blue-200 hover:-translate-y-1 transition-all duration-300" onclick="sendQuickMessage('Aide technique')">
+                    🔧 Support technique
+                </div>
+            </div>
+
+            <div class="message ai-y-4">
+                <div class="message-content max-w-lg p-4 rounded-2xl bg-gradient-to-r from-blue-100 to-indigo-100 text-indigo-800 animate-[slideIn_0.3s_ease-out]">
+                    Bienvenue ! Je peux vous aider avec :
+                    <ul class="list-disc pl-5 mt-2">
+                        <li>Navigation dans l’application</li>
+                        <li>Création et gestion des programmes</li>
+                        <li>Interprétation des résultats</li>
+                        <li>Support technique</li>
+                        <li>Conseils académiques</li>
+                    </ul>
+                    Que souhaitez-vous savoir ?
+                </div>
+            </div>
+
+            <div class="typing-indicator hidden items-center gap-2 text-gray-600 italic ml-14" id="typingIndicator">
+                <span>Assistant ESI écrit</span>
+                <div class="flex gap-1">
+                    <div class="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-[typing_1.4s_infinite]"></div>
+                    <div class="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-[typing_1.4s_0.2s_infinite]"></div>
+                    <div class="typing-dot w-2 h-2 bg-gray-500 rounded-full animate-[typing_1.4s_0.4s_infinite]"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input p-5 bg-white border-t border-gray-200">
+            <div class="input-container flex gap-3 items-center">
+                <input type="text" class="input-field flex-1 px-4 py-3 border-2 border-gray-200 rounded-full text-base focus:border-blue-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-300" id="messageInput" placeholder="Tapez votre question ici..." onkeypress="handleKeyPress(event)">
+                <button class="send-btn w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center btn-glow hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" id="sendBtn" onclick="sendMessage()">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        
+        // Base de connaissances ESI Evaluation
+        const knowledgeBase = {
+            'créer évaluation': {
+                response: "Pour créer une nouvelle évaluation :\n\n1. 📝 Accédez à /evaluation\n2. 🎯 Sélectionnez un enseignant, une matière et une classe\n3. 📚 Remplissez les critères d’évaluation\n4. ⏰ Soumettez le formulaire\n\nBesoin d’aide sur une étape spécifique ?"
+            },
+            'résultats': {
+                response: "Pour consulter vos résultats :\n\n📊 **Direction** : Accédez à /direction pour voir les rapports\n📈 **Admin** : Consultez /dashboard pour les statistiques\n🎯 Les étudiants n’ont pas accès direct aux résultats\n\nQuel type de résultat vous intéresse ?"
+            },
+            'profil': {
+                response: "Gestion de votre profil :\n\n👤 **Inscription** : Modifiez nom/prenom via /register (non implémenté pour mise à jour)\n🔐 **Mot de passe** : Contactez l’admin pour réinitialisation\n📱 **Rôle** : Déterminé lors de l’inscription (Étudiant, Admin, Direction)\n\nQue souhaitez-vous modifier ?"
+            },
+            'technique': {
+                response: "Support technique disponible :\n\n🔧 **Problèmes de connexion** : Vérifiez /login\n💾 **Sauvegarde des données** : Auto-sauvegarde dans la base MySQL\n📱 **Compatibilité** : Chrome, Firefox, Safari\n🔄 **Mise à jour** : Redémarrez le serveur\n📞 **Contact support** : support@esi-evaluation.com\n\nQuel problème rencontrez-vous ?"
+            },
+            'navigation': {
+                response: "Guide de navigation :\n\n🏠 **Accueil** : /\n📝 **Évaluations** : /evaluation (Étudiant)\n📊 **Rapports** : /direction (Direction)\n👥 **Admin** : /dashboard\n⚙️ **Connexion** : /login\n\nOù voulez-vous aller ?"
+            }
+        };
+        
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${isUser ? 'U' : 'AI'}</div>
+                <div class="message-content max-w-lg p-4 rounded-2xl ${isUser ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-gradient-to-r from-blue-100 to-indigo-100 text-indigo-800'} animate-[slideIn_0.3s_ease-out]">${content}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function showTyping() {
+            typingIndicator.style.display = 'flex';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+        }
+        
+        async function getAIResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // Vérifier la base de connaissances locale
+            for (const [key, value] of Object.entries(knowledgeBase)) {
+                if (message.includes(key.toLowerCase())) {
+                    return value.response;
+                }
+            }
+        
+            // Réponses par mots-clés
+            if (message.includes('bonjour') || message.includes('salut')) {
+                return "Bonjour ! 👋 Comment puis-je vous aider avec ESI Évaluation aujourd’hui ?";
+            }
+            
+            if (message.includes('merci')) {
+                return "De rien ! 😊 N’hésitez pas si vous avez d’autres questions sur l’application.";
+            }
+        
+            if (message.includes('aide') || message.includes('help')) {
+                return "Je peux vous aider avec :\n• 📝 Création d’évaluations\n• 📊 Consultation des résultats\n• 👤 Gestion du profil\n• 🔧 Support technique\n• 🧭 Navigation dans l’app\n\nQue voulez-vous savoir ?";
+            }
+        
+            if (message.includes('problème') || message.includes('bug') || message.includes('erreur')) {
+                return "Je vais vous aider à résoudre ce problème ! 🔧\n\nPouvez-vous me décrire plus précisément :\n• Que faisiez-vous quand c’est arrivé ?\n• Quel message d’erreur avez-vous vu ?\n• Sur quel appareil êtes-vous ?\n\nCela m’aidera à mieux vous orienter.";
+            }
+        
+            // Appel au backend pour des réponses dynamiques
+            try {
+                const response = await fetch('/api/assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const result = await response.json();
+                return result.response || "Désolé, je n’ai pas compris. Essayez de reformuler ou tapez 'aide' pour voir mes fonctionnalités !";
+            } catch (err) {
+                return "Erreur de connexion au serveur. Veuillez réessayer plus tard.";
+            }
+        }
+        
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+        
+            sendBtn.disabled = true;
+            messageInput.disabled = true;
+        
+            addMessage(message, true);
+            messageInput.value = '';
+        
+            showTyping();
+        
+            const response = await getAIResponse(message);
+            hideTyping();
+            addMessage(response);
+        
+            sendBtn.disabled = false;
+            messageInput.disabled = false;
+            messageInput.focus();
+        }
+        
+        function sendQuickMessage(message) {
+            messageInput.value = message;
+            sendMessage();
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // Focus automatique
+        messageInput.focus();
+        
+        // Animation des quick actions
+        setTimeout(() => {
+            const quickActions = document.querySelector('.quick-actions');
+            quickActions.style.opacity = '0';
+            quickActions.style.transform = 'translateY(20px)';
+            quickActions.style.transition = 'all 0.5s ease-out';
+            
+            setTimeout(() => {
+                quickActions.style.opacity = '1';
+                quickActions.style.transform = 'translateY(0)';
+            }, 500);
+        }, 1000);
+    </script>
+</body>
+</html>
